@@ -1,0 +1,530 @@
+class LX/0ujw; extends LX/0uj0;
+encoded methods: 13; non-constructors: 11
+
+[01] public static constructor <clinit>()V
+0000: new-instance           v0, Ljava/util/concurrent/ConcurrentHashMap;
+0001: invoke-direct          v0, Ljava/util/concurrent/ConcurrentHashMap;-><init>()V
+0002: sput-object            v0, LX/0ujw;->LJIIIIZZ Ljava/util/concurrent/ConcurrentHashMap;
+0003: new-instance           v0, Ljava/util/concurrent/ConcurrentHashMap;
+0004: invoke-direct          v0, Ljava/util/concurrent/ConcurrentHashMap;-><init>()V
+0005: sput-object            v0, LX/0ujw;->LJIIIZ Ljava/util/Map;
+0006: return-void            
+
+[02] public constructor <init>(Landroid/content/Context;)V
+0000: invoke-direct          v1, LX/0uj0;-><init>()V
+0001: invoke-virtual         v2, Landroid/content/Context;->getApplicationContext()Landroid/content/Context;
+0002: move-result-object     v0
+0003: sput-object            v0, LX/0ujw;->LIZIZ Landroid/content/Context;
+0004: return-void            
+
+[03] public static LIZ([Ljava/lang/String; [B [B J J Z)V
+0000: sget-object            v0, LX/0ujw;->LIZJ Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;
+0001: if-nez                 v0, +003h
+0002: return-void            
+0003: if-nez                 v8, +00bh
+0004: sget-object            v0, LX/0ujw;->LIZIZ Landroid/content/Context;
+0005: invoke-static          v0, LX/0Exj;->LIZLLL(Landroid/content/Context;)Z
+0006: move-result            v0
+0007: if-nez                 v0, +003h
+0008: return-void            
+0009: sget-object            v0, LX/0ujw;->LIZJ Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;
+0010: invoke-interface/range v0 ... v7, Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;->addClientOpaqueData([Ljava/lang/String; [B [B J J)V
+0011: return-void            
+
+[04] public static LIZIZ()V
+0000: sget-object            v0, LX/0ujw;->LIZJ Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;
+0001: if-eqz                 v0, +003h
+0002: return-void            
+0003: new-instance           v1, Ljava/lang/UnsupportedOperationException;
+0004: const-string           v0, "CronetEngine has not been initialized."
+0005: invoke-direct          v1, v0, Ljava/lang/UnsupportedOperationException;-><init>(Ljava/lang/String;)V
+0006: throw                  v1
+
+[05] public static LIZJ()Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;
+0000: sget-boolean           v0, Lcom/bytedance/frameworks/baselib/network/http/NetworkParams;->LJJII Z
+0001: if-eqz                 v0, +008h
+0002: new-instance           v0, Lorg/chromium/CronetClient;
+0003: invoke-direct          v0, Lorg/chromium/CronetClient;-><init>()V
+0004: return-object          v0
+0005: const-string           v1, ""
+0006: invoke-static          v1, Lcom/bytedance/common/utility/StringUtils;->isEmpty(Ljava/lang/String;)Z
+0007: move-result            v0
+0008: if-eqz                 v0, +004h
+0009: const-string           v1, "org.chromium.CronetClient"
+0010: invoke-static          v1, LX/0Tpp;->h0(Ljava/lang/String;)Ljava/lang/Class;
+0011: move-result-object     v0
+0012: invoke-virtual         v0, Ljava/lang/Class;->newInstance()Ljava/lang/Object;
+0013: move-result-object     v1
+0014: instance-of            v0, v1, Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;
+0015: if-eqz                 v0, +005h
+0016: check-cast             v1, Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;
+0017: return-object          v1
+0018: const/4                v0, 0
+0019: return-object          v0
+
+[06] public static LIZLLL(I Ljava/lang/String;)I
+0000: const/high16           v4, 10485760
+0001: const/16               v3, 16384
+0002: const/4                v2, 0
+0003: if-lt                  v5, v3, +00bh
+0004: if-gt                  v5, v4, +009h
+0005: invoke-static          v6, Landroid/text/TextUtils;->isEmpty(Ljava/lang/CharSequence;)Z
+0006: move-result            v0
+0007: if-eqz                 v0, +005h
+0008: return                 v5
+0009: const/4                v5, 0
+0010: goto                   -8h
+0011: sget-object            v1, LX/0ujw;->LJIIIIZZ Ljava/util/concurrent/ConcurrentHashMap;
+0012: invoke-virtual         v1, v6, Ljava/util/concurrent/ConcurrentHashMap;->containsKey(Ljava/lang/Object;)Z
+0013: move-result            v0
+0014: if-eqz                 v0, +00eh
+0015: invoke-virtual         v1, v6, Ljava/util/concurrent/ConcurrentHashMap;->get(Ljava/lang/Object;)Ljava/lang/Object;
+0016: move-result-object     v0
+0017: check-cast             v0, Ljava/lang/Integer;
+0018: if-eqz                 v0, +00bh
+0019: invoke-virtual         v0, Ljava/lang/Integer;->intValue()I
+0020: move-result            v5
+0021: if-lt                  v5, v3, +005h
+0022: if-gt                  v5, v4, +003h
+0023: return                 v5
+0024: return                 v2
+
+[07] public static LJ(Landroid/content/Context;)LX/0ujw;
+0000: sget-object            v0, LX/0ujw;->LJ LX/0ujw;
+0001: if-nez                 v0, +018h
+0002: const-class            v1, LX/0ujw;
+0003: monitor-enter          v1
+0004: sget-object            v0, LX/0ujw;->LJ LX/0ujw;
+0005: if-nez                 v0, +00ch
+0006: new-instance           v0, LX/0ujw;
+0007: invoke-direct          v0, v2, LX/0ujw;-><init>(Landroid/content/Context;)V
+0008: sput-object            v0, LX/0ujw;->LJ LX/0ujw;
+0009: invoke-static          LX/0ujw;->LJI()V
+0010: monitor-exit           v1
+0011: goto                   +4h
+0012: move-exception         v0
+0013: monitor-exit           v1
+0014: throw                  v0
+0015: sget-object            v0, LX/0ujw;->LJ LX/0ujw;
+0016: return-object          v0
+
+[08] public static LJFF(Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetAppProvider; LX/0uWw;)V
+0000: invoke-static          LX/0ujw;->LJI()V
+0001: sget-object            v0, LX/0ujw;->LIZJ Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;
+0002: if-eqz                 v0, +033h
+0003: sget-object            v2, LX/0ujw;->LIZJ Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;
+0004: sget-object            v1, LX/0ujw;->LIZIZ Landroid/content/Context;
+0005: sget-object            v0, Lcom/bytedance/frameworks/baselib/network/http/NetworkParams;->LJIILL Ljava/lang/String;
+0006: invoke-interface       v2, v1, v0, v4, v5, Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;->tryCreateCronetEngine(Landroid/content/Context; Ljava/lang/String; Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetAppProvider; Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetInitListener;)V
+0007: sget-object            v0, LX/0ujE;->LIZ Ljava/util/concurrent/atomic/AtomicBoolean;
+0008: invoke-virtual         v0, Ljava/util/concurrent/atomic/AtomicBoolean;->get()Z
+0009: move-result            v0
+0010: if-eqz                 v0, +022h
+0011: sget-object            v0, LX/0ujE;->LIZJ Ljava/util/concurrent/atomic/AtomicBoolean;
+0012: invoke-virtual         v0, Ljava/util/concurrent/atomic/AtomicBoolean;->get()Z
+0013: move-result            v0
+0014: if-eqz                 v0, +01ah
+0015: const/4                v1, 0
+0016: sget                   v0, LX/0ujE;->LIZLLL I
+0017: invoke-static          v1, v0, Ljava/lang/Math;->max(I I)I
+0018: move-result            v1
+0019: if-lez                 v1, +011h
+0020: sget-object            v0, LX/0rVn;->NETWORK LX/0rVn;
+0021: invoke-static          v0, LX/0uhq;->LIZ(LX/0rVn;)LX/0uhq;
+0022: move-result-object     v3
+0023: new-instance           v2, LX/0uk2;
+0024: int-to-long            v0, v1
+0025: invoke-direct          v2, v0, v1, v4, v5, LX/0uk2;-><init>(J Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetAppProvider; LX/0uWw;)V
+0026: invoke-virtual         v3, v2, LX/0uhq;->LIZIZ(LX/0uhs;)V
+0027: return-void            
+
+[09] public static LJI()V
+0000: sget-object            v0, LX/0ujw;->LIZJ Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;
+0001: if-nez                 v0, +014h
+0002: const-class            v1, LX/0ujw;
+0003: monitor-enter          v1
+0004: sget-object            v0, LX/0ujw;->LIZJ Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;
+0005: if-nez                 v0, +008h
+0006: invoke-static          LX/0ujw;->LIZJ()Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;
+0007: move-result-object     v0
+0008: sput-object            v0, LX/0ujw;->LIZJ Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;
+0009: monitor-exit           v1
+0010: return-void            
+0011: move-exception         v0
+0012: monitor-exit           v1
+0013: throw                  v0
+0014: return-void            
+
+[10] public static LJII(Lorg/json/JSONObject; Landroid/content/SharedPreferences;)V
+0000: const-string           v4, "path_cronet_inputstream_buff_size"
+0001: const-string           v6, "post_body_buffer_size"
+0002: const/4                v7, 0
+0003: const-string           v5, "cronet_inputstream_buff_size"
+0004: const-string           v3, ""
+0005: if-eqz                 v8, +046h
+0006: invoke-virtual         v8, v5, v7, Lorg/json/JSONObject;->optInt(Ljava/lang/String; I)I
+0007: move-result            v0
+0008: sput                   v0, LX/0ujw;->LIZ I
+0009: invoke-virtual         v8, v6, Lorg/json/JSONObject;->optJSONObject(Ljava/lang/String;)Lorg/json/JSONObject;
+0010: move-result-object     v0
+0011: if-eqz                 v0, +022h
+0012: invoke-static          v0, LX/0ujw;->LJIIIZ(Lorg/json/JSONObject;)V
+0013: invoke-static          v0, LX/0Tpp;->LLILZIL(Lorg/json/JSONObject;)Ljava/lang/String;
+0014: move-result-object     v0
+0015: sput-object            v0, LX/0ujw;->LJI Ljava/lang/String;
+0016: invoke-virtual         v8, v4, Lorg/json/JSONObject;->optJSONObject(Ljava/lang/String;)Lorg/json/JSONObject;
+0017: move-result-object     v2
+0018: if-eqz                 v2, +022h
+0019: invoke-static          v2, LX/0Tpp;->LLILZIL(Lorg/json/JSONObject;)Ljava/lang/String;
+0020: move-result-object     v1
+0021: sget-object            v0, LX/0ujw;->LJII Ljava/lang/String;
+0022: if-eqz                 v0, +014h
+0023: sget-object            v0, LX/0ujw;->LJII Ljava/lang/String;
+0024: invoke-virtual         v1, v0, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+0025: move-result            v0
+0026: if-eqz                 v0, +00ch
+0027: goto                   +9h
+0028: sget-object            v0, LX/0ujw;->LJIIIIZZ Ljava/util/concurrent/ConcurrentHashMap;
+0029: invoke-virtual         v0, Ljava/util/concurrent/ConcurrentHashMap;->clear()V
+0030: sput-object            v3, LX/0ujw;->LJI Ljava/lang/String;
+0031: goto                   -1eh
+0032: return-void            
+0033: invoke-static          v2, LX/0ujw;->LJIIIIZZ(Lorg/json/JSONObject;)V
+0034: sput-object            v1, LX/0ujw;->LJII Ljava/lang/String;
+0035: goto                   +ah
+0036: sget-object            v0, LX/0ujw;->LJIIIZ Ljava/util/Map;
+0037: check-cast             v0, Ljava/util/concurrent/ConcurrentHashMap;
+0038: invoke-virtual         v0, Ljava/util/concurrent/ConcurrentHashMap;->clear()V
+0039: sput-object            v3, LX/0ujw;->LJII Ljava/lang/String;
+0040: if-eqz                 v9, +034h
+0041: invoke-interface       v9, v5, v7, Landroid/content/SharedPreferences;->getInt(Ljava/lang/String; I)I
+0042: move-result            v0
+0043: sput                   v0, LX/0ujw;->LIZ I
+0044: invoke-interface       v9, v6, v3, Landroid/content/SharedPreferences;->getString(Ljava/lang/String; Ljava/lang/String;)Ljava/lang/String;
+0045: move-result-object     v2
+0046: invoke-static          v2, Landroid/text/TextUtils;->isEmpty(Ljava/lang/CharSequence;)Z
+0047: move-result            v0
+0048: if-nez                 v0, +00eh
+0049: new-instance           v1, Lorg/json/JSONObject;
+0050: invoke-static          v2, Lcom/bytedance/aweme/coffee/json/JSONTokenerGetter;->get(Ljava/lang/String;)Lorg/json/JSONTokener;
+0051: move-result-object     v0
+0052: invoke-direct          v1, v0, Lorg/json/JSONObject;-><init>(Lorg/json/JSONTokener;)V
+0053: invoke-static          v1, LX/0ujw;->LJIIIZ(Lorg/json/JSONObject;)V
+0054: invoke-interface       v9, v4, v3, Landroid/content/SharedPreferences;->getString(Ljava/lang/String; Ljava/lang/String;)Ljava/lang/String;
+0055: move-result-object     v2
+0056: invoke-static          v2, Landroid/text/TextUtils;->isEmpty(Ljava/lang/CharSequence;)Z
+0057: move-result            v0
+0058: if-nez                 v0, +00eh
+0059: new-instance           v1, Lorg/json/JSONObject;
+0060: invoke-static          v2, Lcom/bytedance/aweme/coffee/json/JSONTokenerGetter;->get(Ljava/lang/String;)Lorg/json/JSONTokener;
+0061: move-result-object     v0
+0062: invoke-direct          v1, v0, Lorg/json/JSONObject;-><init>(Lorg/json/JSONTokener;)V
+0063: invoke-static          v1, LX/0ujw;->LJIIIIZZ(Lorg/json/JSONObject;)V
+0064: return-void            
+
+[11] public static LJIIIIZZ(Lorg/json/JSONObject;)V
+0000: sget-object            v0, LX/0ujw;->LJIIIZ Ljava/util/Map;
+0001: check-cast             v0, Ljava/util/concurrent/ConcurrentHashMap;
+0002: invoke-virtual         v0, Ljava/util/concurrent/ConcurrentHashMap;->clear()V
+0003: invoke-virtual         v5, Lorg/json/JSONObject;->keys()Ljava/util/Iterator;
+0004: move-result-object     v4
+0005: invoke-interface       v4, Ljava/util/Iterator;->hasNext()Z
+0006: move-result            v0
+0007: if-eqz                 v0, +024h
+0008: invoke-interface       v4, Ljava/util/Iterator;->next()Ljava/lang/Object;
+0009: move-result-object     v3
+0010: check-cast             v3, Ljava/lang/String;
+0011: invoke-static          v3, Landroid/text/TextUtils;->isEmpty(Ljava/lang/CharSequence;)Z
+0012: move-result            v0
+0013: if-nez                 v0, -010h
+0014: invoke-virtual         v5, v3, Lorg/json/JSONObject;->optInt(Ljava/lang/String;)I
+0015: move-result            v2
+0016: if-lez                 v2, -016h
+0017: const/high16           v0, 20971520
+0018: if-gt                  v2, v0, -01ah
+0019: sget-object            v1, LX/0ujw;->LJIIIZ Ljava/util/Map;
+0020: invoke-static          v2, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
+0021: move-result-object     v0
+0022: check-cast             v1, Ljava/util/concurrent/ConcurrentHashMap;
+0023: invoke-virtual         v1, v3, v0, Ljava/util/concurrent/ConcurrentHashMap;->put(Ljava/lang/Object; Ljava/lang/Object;)Ljava/lang/Object;
+0024: goto                   -27h
+0025: return-void            
+
+[12] public static LJIIIZ(Lorg/json/JSONObject;)V
+0000: sget-object            v0, LX/0ujw;->LJIIIIZZ Ljava/util/concurrent/ConcurrentHashMap;
+0001: invoke-virtual         v0, Ljava/util/concurrent/ConcurrentHashMap;->clear()V
+0002: invoke-virtual         v5, Lorg/json/JSONObject;->keys()Ljava/util/Iterator;
+0003: move-result-object     v4
+0004: invoke-interface       v4, Ljava/util/Iterator;->hasNext()Z
+0005: move-result            v0
+0006: if-eqz                 v0, +024h
+0007: invoke-interface       v4, Ljava/util/Iterator;->next()Ljava/lang/Object;
+0008: move-result-object     v3
+0009: check-cast             v3, Ljava/lang/String;
+0010: invoke-virtual         v5, v3, Lorg/json/JSONObject;->optInt(Ljava/lang/String;)I
+0011: move-result            v2
+0012: invoke-static          v3, Landroid/text/TextUtils;->isEmpty(Ljava/lang/CharSequence;)Z
+0013: move-result            v0
+0014: if-nez                 v0, -014h
+0015: const/16               v0, 16384
+0016: if-lt                  v2, v0, -018h
+0017: const/high16           v0, 10485760
+0018: if-gt                  v2, v0, -01ch
+0019: sget-object            v1, LX/0ujw;->LJIIIIZZ Ljava/util/concurrent/ConcurrentHashMap;
+0020: invoke-static          v2, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
+0021: move-result-object     v0
+0022: invoke-virtual         v1, v3, v0, Ljava/util/concurrent/ConcurrentHashMap;->put(Ljava/lang/Object; Ljava/lang/Object;)Ljava/lang/Object;
+0023: goto                   -27h
+0024: return-void            
+
+[13] public final newSsCall(Lcom/bytedance/retrofit2/client/Request;)Lcom/bytedance/retrofit2/client/SsCall;
+0000: move-object/from16     v2, v18
+0001: invoke-virtual         v2, Lcom/bytedance/retrofit2/client/Request;->getExtraInfo()Ljava/lang/Object;
+0002: move-result-object     v0
+0003: instance-of            v0, v0, Lcom/bytedance/frameworks/baselib/network/http/BaseRequestContext;
+0004: sget-object            v0, LX/0ujE;->LIZ Ljava/util/concurrent/atomic/AtomicBoolean;
+0005: invoke-virtual         v0, Ljava/util/concurrent/atomic/AtomicBoolean;->get()Z
+0006: move-result            v0
+0007: const/4                v1, 0
+0008: if-eqz                 v0, +01fh
+0009: sget-object            v3, LX/0ujE;->LJ Ljava/util/List;
+0010: invoke-interface       v3, Ljava/util/List;->isEmpty()Z
+0011: move-result            v0
+0012: if-nez                 v0, +017h
+0013: invoke-virtual         v2, Lcom/bytedance/retrofit2/client/Request;->getUri()Ljava/net/URI;
+0014: move-result-object     v0
+0015: if-eqz                 v0, +011h
+0016: invoke-virtual         v2, Lcom/bytedance/retrofit2/client/Request;->getUri()Ljava/net/URI;
+0017: move-result-object     v0
+0018: invoke-virtual         v0, Ljava/net/URI;->getHost()Ljava/lang/String;
+0019: move-result-object     v0
+0020: if-eqz                 v0, +007h
+0021: invoke-interface       v3, v0, Ljava/util/List;->contains(Ljava/lang/Object;)Z
+0022: move-result            v5
+0023: goto                   +2h
+0024: const/4                v5, 0
+0025: sget-object            v0, LX/0ujw;->LIZJ Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;
+0026: const/4                v3, 1
+0027: if-eqz                 v0, +01fh
+0028: sget-object            v0, LX/0ujw;->LIZJ Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;
+0029: invoke-interface       v0, Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;->isReadyForSubEngine()Z
+0030: move-result            v0
+0031: if-eqz                 v0, +017h
+0032: const/4                v4, 1
+0033: sget-object            v0, LX/0ujE;->LIZIZ Ljava/util/concurrent/atomic/AtomicBoolean;
+0034: invoke-virtual         v0, Ljava/util/concurrent/atomic/AtomicBoolean;->get()Z
+0035: move-result            v0
+0036: if-eqz                 v5, +02bh
+0037: if-eqz                 v4, +022h
+0038: if-eqz                 v0, +020h
+0039: sget-object            v0, LX/0ujw;->LIZLLL Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;
+0040: if-nez                 v0, +01ch
+0041: const-class            v4, LX/0ujw;
+0042: monitor-enter          v4
+0043: goto                   +3h
+0044: const/4                v4, 0
+0045: goto                   -15h
+0046: sget-object            v0, LX/0ujw;->LIZLLL Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;
+0047: if-nez                 v0, +00dh
+0048: invoke-static          LX/0ujw;->LIZJ()Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;
+0049: move-result-object     v0
+0050: if-eqz                 v0, +007h
+0051: invoke-interface       v0, Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;->markAsSubEngine()V
+0052: sput-object            v0, LX/0ujw;->LIZLLL Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;
+0053: monitor-exit           v4
+0054: goto                   +4h
+0055: move-exception         v0
+0056: monitor-exit           v4
+0057: throw                  v0
+0058: sget-object            v0, LX/0ujw;->LIZLLL Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;
+0059: if-eqz                 v0, +005h
+0060: sget-object            v11, LX/0ujw;->LIZLLL Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;
+0061: goto                   +6h
+0062: invoke-static          LX/0ujw;->LJI()V
+0063: sget-object            v11, LX/0ujw;->LIZJ Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;
+0064: if-eqz                 v11, +16ah
+0065: sget-object            v12, LX/0ujw;->LIZIZ Landroid/content/Context;
+0066: sget-object            v13, Lcom/bytedance/frameworks/baselib/network/http/NetworkParams;->LJIILL Ljava/lang/String;
+0067: sget-object            v14, LX/0ujw;->LJIIJ Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetAppProvider;
+0068: sget-object            v15, LX/0ujw;->LJIIJJI Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetInitListener;
+0069: invoke-virtual         v2, Lcom/bytedance/retrofit2/client/Request;->getPath()Ljava/lang/String;
+0070: move-result-object     v16
+0071: invoke-interface/range v11 ... v16, Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;->lazyInitCronetEngine(Landroid/content/Context; Ljava/lang/String; Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetAppProvider; Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetInitListener; Ljava/lang/String;)V
+0072: invoke-virtual         v2, Lcom/bytedance/retrofit2/client/Request;->getBody()Lcom/bytedance/retrofit2/mime/TypedOutput;
+0073: move-result-object     v4
+0074: instance-of            v0, v4, Lcom/bytedance/retrofit2/mime/FormUrlEncodedTypedOutput;
+0075: if-eqz                 v0, +012h
+0076: check-cast             v4, Lcom/bytedance/retrofit2/mime/FormUrlEncodedTypedOutput;
+0077: invoke-virtual         v4, v2, Lcom/bytedance/retrofit2/mime/FormUrlEncodedTypedOutput;->useFormBodyModifyHookAndConstructStream(Lcom/bytedance/retrofit2/client/Request;)V
+0078: invoke-virtual         v2, Lcom/bytedance/retrofit2/client/Request;->newBuilder()Lcom/bytedance/retrofit2/client/Request$Builder;
+0079: move-result-object     v0
+0080: invoke-virtual         v0, v4, Lcom/bytedance/retrofit2/client/Request$Builder;->post(Lcom/bytedance/retrofit2/mime/TypedOutput;)Lcom/bytedance/retrofit2/client/Request$Builder;
+0081: invoke-virtual         v0, Lcom/bytedance/retrofit2/client/Request$Builder;->build()Lcom/bytedance/retrofit2/client/Request;
+0082: move-result-object     v2
+0083: invoke-static          Lcom/bytedance/frameworks/baselib/network/queryfilter/QueryFilterEngine;->inst()Lcom/bytedance/frameworks/baselib/network/queryfilter/QueryFilterEngine;
+0084: move-result-object     v0
+0085: invoke-virtual         v0, v2, Lcom/bytedance/frameworks/baselib/network/queryfilter/QueryFilterEngine;->LIZJ(Lcom/bytedance/retrofit2/client/Request;)Lcom/bytedance/retrofit2/client/Request;
+0086: move-result-object     v4
+0087: sget-object            v0, LX/0ujw;->LIZIZ Landroid/content/Context;
+0088: invoke-static          v0, v4, LX/0J7i;->LIZ(Landroid/content/Context; Lcom/bytedance/retrofit2/client/Request;)V
+0089: if-eqz                 v4, +003h
+0090: move-object            v2, v4
+0091: invoke-static          LX/0ujz;->LIZJ()LX/0ujz;
+0092: move-result-object     v0
+0093: iget                   v0, v0, LX/0ujz;->LIZ I
+0094: if-lez                 v0, +125h
+0095: invoke-virtual         v2, Lcom/bytedance/retrofit2/client/Request;->getUrl()Ljava/lang/String;
+0096: move-result-object     v4
+0097: const-string           v0, "no_retry=1"
+0098: invoke-virtual         v4, v0, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+0099: move-result            v0
+0100: if-nez                 v0, +119h
+0101: invoke-static          LX/0ujz;->LIZJ()LX/0ujz;
+0102: move-result-object     v9
+0103: iget-object            v0, v9, LX/0ujz;->LIZIZ Ljava/util/List;
+0104: check-cast             v0, Ljava/util/concurrent/CopyOnWriteArrayList;
+0105: invoke-virtual         v0, Ljava/util/concurrent/CopyOnWriteArrayList;->iterator()Ljava/util/Iterator;
+0106: move-result-object     v10
+0107: invoke-interface       v10, Ljava/util/Iterator;->hasNext()Z
+0108: move-result            v0
+0109: if-eqz                 v0, +022h
+0110: invoke-interface       v10, Ljava/util/Iterator;->next()Ljava/lang/Object;
+0111: move-result-object     v8
+0112: check-cast             v8, LX/0uk1;
+0113: iget-boolean           v0, v8, LX/0uk1;->LJIIJJI Z
+0114: if-eqz                 v0, -00eh
+0115: invoke-static          Landroid/os/SystemClock;->uptimeMillis()J
+0116: move-result-wide       v6
+0117: iget-wide              v4, v8, LX/0uk1;->LJIIJ J
+0118: sub-long/2addr         v6, v4
+0119: iget                   v0, v8, LX/0uk1;->LJI I
+0120: mul-int/lit16          v0, v0, 1000
+0121: int-to-long            v4, v0
+0122: cmp-long               v0, v6, v4
+0123: if-lez                 v0, +004h
+0124: iput-boolean           v1, v8, LX/0uk1;->LJIIJJI Z
+0125: invoke-static          Lcom/bytedance/common/utility/Logger;->debug()Z
+0126: goto                   -25h
+0127: iget-object            v0, v9, LX/0ujz;->LIZIZ Ljava/util/List;
+0128: check-cast             v0, Ljava/util/concurrent/CopyOnWriteArrayList;
+0129: invoke-virtual         v0, Ljava/util/concurrent/CopyOnWriteArrayList;->iterator()Ljava/util/Iterator;
+0130: move-result-object     v6
+0131: invoke-interface       v6, Ljava/util/Iterator;->hasNext()Z
+0132: move-result            v0
+0133: if-eqz                 v0, +0d9h
+0134: invoke-interface       v6, Ljava/util/Iterator;->next()Ljava/lang/Object;
+0135: move-result-object     v4
+0136: check-cast             v4, LX/0uk1;
+0137: iget                   v0, v4, LX/0uk1;->LJI I
+0138: if-lez                 v0, +007h
+0139: iget-boolean           v0, v4, LX/0uk1;->LJIIJJI Z
+0140: if-eqz                 v0, +003h
+0141: goto                   -14h
+0142: invoke-virtual         v2, Lcom/bytedance/retrofit2/client/Request;->getUrl()Ljava/lang/String;
+0143: move-result-object     v0
+0144: invoke-static          v0, Landroid/text/TextUtils;->isEmpty(Ljava/lang/CharSequence;)Z
+0145: move-result            v0
+0146: if-nez                 v0, -01dh
+0147: iget-object            v0, v4, LX/0uk1;->LIZ Ljava/util/List;
+0148: invoke-interface       v0, Ljava/util/List;->iterator()Ljava/util/Iterator;
+0149: move-result-object     v5
+0150: invoke-interface       v5, Ljava/util/Iterator;->hasNext()Z
+0151: move-result            v0
+0152: if-eqz                 v0, +0afh
+0153: invoke-interface       v5, Ljava/util/Iterator;->next()Ljava/lang/Object;
+0154: move-result-object     v1
+0155: check-cast             v1, Ljava/lang/String;
+0156: invoke-virtual         v2, Lcom/bytedance/retrofit2/client/Request;->getHost()Ljava/lang/String;
+0157: move-result-object     v0
+0158: invoke-static          v0, v1, Lcom/bytedance/frameworks/baselib/network/http/util/UrlUtils;->LIZIZ(Ljava/lang/String; Ljava/lang/String;)Z
+0159: move-result            v0
+0160: if-eqz                 v0, -014h
+0161: invoke-virtual         v2, Lcom/bytedance/retrofit2/client/Request;->getPath()Ljava/lang/String;
+0162: move-result-object     v5
+0163: invoke-static          v5, Landroid/text/TextUtils;->isEmpty(Ljava/lang/CharSequence;)Z
+0164: move-result            v0
+0165: if-nez                 v0, -043h
+0166: iget-object            v0, v4, LX/0uk1;->LIZJ Ljava/util/List;
+0167: if-eqz                 v0, +03dh
+0168: check-cast             v0, Ljava/util/ArrayList;
+0169: invoke-virtual         v0, Ljava/util/ArrayList;->isEmpty()Z
+0170: move-result            v0
+0171: if-nez                 v0, +035h
+0172: iget-object            v0, v4, LX/0uk1;->LIZJ Ljava/util/List;
+0173: check-cast             v0, Ljava/util/ArrayList;
+0174: invoke-virtual         v0, Ljava/util/ArrayList;->iterator()Ljava/util/Iterator;
+0175: move-result-object     v1
+0176: invoke-interface       v1, Ljava/util/Iterator;->hasNext()Z
+0177: move-result            v0
+0178: if-eqz                 v0, +027h
+0179: invoke-interface       v1, Ljava/util/Iterator;->next()Ljava/lang/Object;
+0180: move-result-object     v0
+0181: invoke-virtual         v5, v0, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+0182: move-result            v0
+0183: if-eqz                 v0, -00eh
+0184: iget-object            v0, v4, LX/0uk1;->LIZIZ Ljava/util/List;
+0185: if-eqz                 v0, +072h
+0186: invoke-interface       v0, Ljava/util/List;->size()I
+0187: move-result            v1
+0188: const/4                v0, 2
+0189: if-lt                  v1, v0, +06bh
+0190: invoke-virtual         v2, Lcom/bytedance/retrofit2/client/Request;->getMetrics()Lcom/bytedance/retrofit2/RetrofitMetrics;
+0191: move-result-object     v0
+0192: iget-object            v0, v0, Lcom/bytedance/retrofit2/RetrofitMetrics;->networklib Lcom/bytedance/retrofit2/NetworkLibLayerMetrics;
+0193: iget-object            v0, v0, Lcom/bytedance/retrofit2/NetworkLibLayerMetrics;->misc Lcom/bytedance/retrofit2/NetworkLibLayerMetrics$Misc;
+0194: iput-boolean           v3, v0, Lcom/bytedance/retrofit2/NetworkLibLayerMetrics$Misc;->isConcurrentRequest Z
+0195: new-instance           v0, LX/0ul9;
+0196: invoke-direct          v0, v2, v4, v11, LX/0ul9;-><init>(Lcom/bytedance/retrofit2/client/Request; LX/0uk1; Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;)V
+0197: return-object          v0
+0198: iget-object            v0, v4, LX/0uk1;->LIZLLL Ljava/util/List;
+0199: if-eqz                 v0, +025h
+0200: check-cast             v0, Ljava/util/ArrayList;
+0201: invoke-virtual         v0, Ljava/util/ArrayList;->isEmpty()Z
+0202: move-result            v0
+0203: if-nez                 v0, +01dh
+0204: iget-object            v0, v4, LX/0uk1;->LIZLLL Ljava/util/List;
+0205: check-cast             v0, Ljava/util/ArrayList;
+0206: invoke-virtual         v0, Ljava/util/ArrayList;->iterator()Ljava/util/Iterator;
+0207: move-result-object     v1
+0208: invoke-interface       v1, Ljava/util/Iterator;->hasNext()Z
+0209: move-result            v0
+0210: if-eqz                 v0, +00fh
+0211: invoke-interface       v1, Ljava/util/Iterator;->next()Ljava/lang/Object;
+0212: move-result-object     v0
+0213: check-cast             v0, Ljava/lang/String;
+0214: invoke-virtual         v5, v0, Ljava/lang/String;->startsWith(Ljava/lang/String;)Z
+0215: move-result            v0
+0216: if-eqz                 v0, -010h
+0217: goto                   -41h
+0218: iget-object            v0, v4, LX/0uk1;->LJ Ljava/util/List;
+0219: if-eqz                 v0, -0adh
+0220: check-cast             v0, Ljava/util/ArrayList;
+0221: invoke-virtual         v0, Ljava/util/ArrayList;->isEmpty()Z
+0222: move-result            v0
+0223: if-nez                 v0, -0b5h
+0224: iget-object            v0, v4, LX/0uk1;->LJ Ljava/util/List;
+0225: check-cast             v0, Ljava/util/ArrayList;
+0226: invoke-virtual         v0, Ljava/util/ArrayList;->iterator()Ljava/util/Iterator;
+0227: move-result-object     v1
+0228: invoke-interface       v1, Ljava/util/Iterator;->hasNext()Z
+0229: move-result            v0
+0230: if-eqz                 v0, -0c3h
+0231: invoke-interface       v1, Ljava/util/Iterator;->next()Ljava/lang/Object;
+0232: move-result-object     v0
+0233: check-cast             v0, Ljava/util/regex/Pattern;
+0234: if-eqz                 v0, -00ch
+0235: invoke-virtual         v0, v5, Ljava/util/regex/Pattern;->matcher(Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;
+0236: move-result-object     v0
+0237: invoke-virtual         v0, Ljava/util/regex/Matcher;->matches()Z
+0238: move-result            v0
+0239: if-eqz                 v0, -016h
+0240: goto                   -6eh
+0241: invoke-static          Lcom/bytedance/common/utility/Logger;->debug()Z
+0242: goto/16                -0dbh
+0243: new-instance           v0, LX/0ulG;
+0244: invoke-direct          v0, v2, v11, LX/0ulG;-><init>(Lcom/bytedance/retrofit2/client/Request; Lcom/bytedance/frameworks/baselib/network/http/cronet/ICronetClient;)V
+0245: return-object          v0
+0246: new-instance           v1, Ljava/io/IOException;
+0247: const-string           v0, "createCronetClient failed"
+0248: invoke-direct          v1, v0, Ljava/io/IOException;-><init>(Ljava/lang/String;)V
+0249: throw                  v1

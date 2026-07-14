@@ -1,0 +1,4 @@
+samples/*.apk
+extracted/
+tools/
+__pycache__/

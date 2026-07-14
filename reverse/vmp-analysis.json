@@ -1,0 +1,384 @@
+{
+  "sample": {
+    "path": "E:\\douyin-golden-goose-crawler\\reverse\\samples\\douyin-mall-39.5.0.apk",
+    "size": 171625689,
+    "sha256": "6ea722364e006b8e246d94d32b41755528ff8e6d7d368d3c0c5f49defff50bf2"
+  },
+  "vmp_library": {
+    "apk_entry": "lib/arm64-v8a/libdexvmp.so",
+    "size": 492024,
+    "sha256": "0c8a58be920c8afb336f54b84cfbb23cb932086d6bee482a383e402c4c1ca29a",
+    "elf_class": 64,
+    "machine": "EM_AARCH64",
+    "type": "ET_DYN",
+    "soname": "libdexvmp.so",
+    "dependencies": [
+      "liblog.so",
+      "libc.so",
+      "libm.so",
+      "libstdc++.so",
+      "libdl.so"
+    ],
+    "text_size": 414312,
+    "defined_function_count": 284,
+    "largest_functions": [
+      {
+        "name": "j__lIIl0$lII0I0l5SlOIlllI_$ll$_I0_OOOl$l0SIIIII_IOSS5$",
+        "address": 166960,
+        "size": 205196
+      },
+      {
+        "name": "j__lI0OlOll$_ISlI5II_l$SO$IllO$l5$_0$$lIIIl$_lIIlSSS5$",
+        "address": 437976,
+        "size": 8684
+      },
+      {
+        "name": "j__lIlII$lIIl5IlS0_IOll$_l$l0$S__IIl5I$SIlS0I50_I$lS5$",
+        "address": 126160,
+        "size": 4360
+      },
+      {
+        "name": "j__l5Illlll0I_5l$IlI_llSIl$lI_IIlIOS5lOI5IIlOlIlS0OS5$",
+        "address": 121896,
+        "size": 3612
+      },
+      {
+        "name": "j__lIlIl0l$SO5IlI0IO0lI_0I5lll$lSllI$0_5550IOl_5OIIS5$",
+        "address": 48648,
+        "size": 3248
+      },
+      {
+        "name": "j__lOI_I$l5SI_lllSIS5lOIl0$ll_I$III0Sll5_I0ISIlS0$$S5$",
+        "address": 118548,
+        "size": 3100
+      },
+      {
+        "name": "j__l_0lIIlSI_l$l$SOSSl_l_5_l_l$0O_0SI_IIO_lIO5II_0IS5$",
+        "address": 415360,
+        "size": 2292
+      },
+      {
+        "name": "j__lI$lIll_l0IOl_SOI0ll_$lSl$00lSII0lI5S$IISIl_SO0OS5$",
+        "address": 410148,
+        "size": 2140
+      },
+      {
+        "name": "j__l_I$_Sl__II_lS$OIIlI0II5lll$_5__$0Ill0l_$llllISIS5$",
+        "address": 156432,
+        "size": 2000
+      },
+      {
+        "name": "j__lSSI$_l$ISI_lS5OOIll5I_IlSOO5_I0lIIII$SISlIl$_OOS5$",
+        "address": 146308,
+        "size": 1996
+      }
+    ],
+    "imports": [
+      "__cxa_atexit",
+      "__cxa_finalize",
+      "__stack_chk_fail",
+      "__stack_chk_guard",
+      "calloc",
+      "dlsym",
+      "exit",
+      "fmod",
+      "fmodf",
+      "free",
+      "malloc",
+      "memcpy",
+      "memmove",
+      "memset",
+      "pthread_mutex_init",
+      "pthread_mutex_lock",
+      "pthread_mutex_unlock",
+      "sprintf",
+      "strcmp",
+      "strlen",
+      "strncmp",
+      "strncpy"
+    ],
+    "has_jni_on_load": true
+  },
+  "protected_method_count": 30,
+  "vm_ids": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29
+  ],
+  "gateway_counts": {
+    "cV": 20,
+    "cL": 8,
+    "cZ": 2
+  },
+  "protected_methods": [
+    {
+      "dex": "classes35.dex",
+      "vm_id": 0,
+      "gateway": "cV",
+      "class": "Lcn/wh/auth/WAuth$1;",
+      "method": "onActivityResult",
+      "descriptor": "(I I Landroid/content/Intent;)V"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 1,
+      "gateway": "cV",
+      "class": "Lcn/wh/auth/WAuth$1;",
+      "method": "<init>",
+      "descriptor": "(Lcn/wh/auth/WAuth;)V"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 2,
+      "gateway": "cV",
+      "class": "Lcn/wh/auth/WAuth;",
+      "method": "getAuthResult",
+      "descriptor": "(Lcn/wh/auth/OnCallBack;)V"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 3,
+      "gateway": "cL",
+      "class": "Lcn/wh/auth/WAuth;",
+      "method": "getPackageName",
+      "descriptor": "()Ljava/lang/String;"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 4,
+      "gateway": "cV",
+      "class": "Lcn/wh/auth/WAuth;",
+      "method": "<init>",
+      "descriptor": "(Landroid/app/Activity; Lcn/wh/auth/bean/WParams;)V"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 5,
+      "gateway": "cV",
+      "class": "Lcn/wh/auth/WAuth;",
+      "method": "init",
+      "descriptor": "()V"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 6,
+      "gateway": "cV",
+      "class": "Lcn/wh/auth/WAuthService;",
+      "method": "getAuthFromIntent",
+      "descriptor": "()V"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 7,
+      "gateway": "cV",
+      "class": "Lcn/wh/auth/WAuthService;",
+      "method": "callback",
+      "descriptor": "()V"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 8,
+      "gateway": "cL",
+      "class": "Lcn/wh/auth/WAuthService;",
+      "method": "getVersion",
+      "descriptor": "()Ljava/lang/String;"
+    },
+    {
+      "dex": "classes12.dex",
+      "vm_id": 9,
+      "gateway": "cL",
+      "class": "Lcn/wh/auth/bean/AuthData;",
+      "method": "toString",
+      "descriptor": "()Ljava/lang/String;"
+    },
+    {
+      "dex": "classes12.dex",
+      "vm_id": 10,
+      "gateway": "cV",
+      "class": "Lcn/wh/auth/bean/AuthData;",
+      "method": "<init>",
+      "descriptor": "()V"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 11,
+      "gateway": "cV",
+      "class": "Lcn/wh/auth/bean/CheckInstall;",
+      "method": "<init>",
+      "descriptor": "()V"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 12,
+      "gateway": "cL",
+      "class": "Lcn/wh/auth/bean/CheckInstall;",
+      "method": "getAppSignature",
+      "descriptor": "(Landroid/content/Context; Ljava/lang/String;)Ljava/lang/String;"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 13,
+      "gateway": "cZ",
+      "class": "Lcn/wh/auth/bean/CheckInstall;",
+      "method": "isAppInstalled",
+      "descriptor": "(Landroid/app/Activity;)Z"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 14,
+      "gateway": "cZ",
+      "class": "Lcn/wh/auth/bean/CheckInstall;",
+      "method": "isIntentExisting",
+      "descriptor": "(Landroid/content/Context; Ljava/lang/String;)Z"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 15,
+      "gateway": "cL",
+      "class": "Lcn/wh/auth/bean/Result;",
+      "method": "toString",
+      "descriptor": "()Ljava/lang/String;"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 16,
+      "gateway": "cV",
+      "class": "Lcn/wh/auth/bean/Result;",
+      "method": "<init>",
+      "descriptor": "()V"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 17,
+      "gateway": "cL",
+      "class": "Lcn/wh/auth/bean/WParams;",
+      "method": "toString",
+      "descriptor": "()Ljava/lang/String;"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 18,
+      "gateway": "cV",
+      "class": "Lcn/wh/auth/bean/WParams;",
+      "method": "<init>",
+      "descriptor": "(Ljava/lang/String; Ljava/lang/String; I)V"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 19,
+      "gateway": "cV",
+      "class": "Lcn/wh/auth/bean/WParams;",
+      "method": "<init>",
+      "descriptor": "(Ljava/lang/String; Ljava/lang/String; Ljava/lang/String; I)V"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 20,
+      "gateway": "cV",
+      "class": "Lcn/wh/auth/bean/WParams;",
+      "method": "<init>",
+      "descriptor": "(Ljava/lang/String; Ljava/lang/String; Ljava/lang/String; I Ljava/lang/String;)V"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 21,
+      "gateway": "cV",
+      "class": "Lcn/wh/auth/server/OnWHResultDispatcherFragment;",
+      "method": "cn_wh_auth_server_OnWHResultDispatcherFragment__onActivityResult$___twin___",
+      "descriptor": "(I I Landroid/content/Intent;)V"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 22,
+      "gateway": "cV",
+      "class": "Lcn/wh/auth/server/OnWHResultDispatcherFragment;",
+      "method": "cn_wh_auth_server_OnWHResultDispatcherFragment_fork_by_sceneContext_onCreate",
+      "descriptor": "(Landroid/os/Bundle;)V"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 23,
+      "gateway": "cV",
+      "class": "Lcn/wh/auth/server/OnWHResultDispatcherFragment;",
+      "method": "startForResult",
+      "descriptor": "(Landroid/content/Intent; Lcn/wh/auth/server/ResultRequestService$Callback;)V"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 24,
+      "gateway": "cV",
+      "class": "Lcn/wh/auth/server/ResultRequestService$1;",
+      "method": "<init>",
+      "descriptor": "(Lcn/wh/auth/server/ResultRequestService; Landroid/content/Intent; Lcn/wh/auth/server/ResultRequestService$Callback;)V"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 25,
+      "gateway": "cV",
+      "class": "Lcn/wh/auth/server/ResultRequestService;",
+      "method": "startForResult",
+      "descriptor": "(Landroid/content/Intent; Lcn/wh/auth/server/ResultRequestService$Callback;)V"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 26,
+      "gateway": "cV",
+      "class": "Lcn/wh/auth/server/ResultRequestService;",
+      "method": "<init>",
+      "descriptor": "(Landroid/app/Activity;)V"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 27,
+      "gateway": "cL",
+      "class": "Lcn/wh/auth/server/ResultRequestService;",
+      "method": "findEventDispatchFragment",
+      "descriptor": "(Landroid/app/FragmentManager;)Lcn/wh/auth/server/OnWHResultDispatcherFragment;"
+    },
+    {
+      "dex": "classes35.dex",
+      "vm_id": 28,
+      "gateway": "cL",
+      "class": "Lcn/wh/auth/server/ResultRequestService;",
+      "method": "getEventDispatchFragment",
+      "descriptor": "(Landroid/app/Activity;)Lcn/wh/auth/server/OnWHResultDispatcherFragment;"
+    },
+    {
+      "dex": "classes12.dex",
+      "vm_id": 29,
+      "gateway": "cV",
+      "class": "Lcn/wh/authapi/BuildConfig;",
+      "method": "<init>",
+      "descriptor": "()V"
+    }
+  ],
+  "external_auth_call_count": 0,
+  "external_auth_calls": []
+}

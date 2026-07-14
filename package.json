@@ -1,0 +1,33 @@
+{
+  "name": "douyin-golden-goose-crawler",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Playwright Android crawler for Golden Goose products in Douyin Mall on MuMu.",
+  "scripts": {
+    "build:webview-agent": "frida-compile hook/enable-webview-debug.js -o hook/enable-webview-debug.bundle.js -B iife -S",
+    "build:native-chain": "frida-compile hook/native-chain.js -o hook/native-chain.bundle.js -B iife -S",
+    "build:native-signer": "frida-compile hook/native-signer-agent.js -o hook/native-signer-agent.bundle.js -B iife -S",
+    "capture:webview": "npm run build:webview-agent && node hook/capture-webview.mjs",
+    "capture:native": "npm run build:native-chain && node hook/run-native-chain.mjs",
+    "probe:native": "python hook/native-probe.py",
+    "sign:service": "node tools/bdms-signer-service.mjs",
+    "sign:native": "python native_sign.py",
+    "test:signer": "python -m unittest discover -s test -p test_*.py",
+    "verify:h5": "python tools/verify_h5_api.py",
+    "probe": "node src/probe.mjs",
+    "start": "node src/cli.mjs",
+    "test": "node --test \"test/*.test.mjs\" && npm run test:signer"
+  },
+  "dependencies": {
+    "frida": "^17.15.4",
+    "playwright": "1.61.1"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "frida-compile": "^19.0.5",
+    "frida-java-bridge": "^7.0.13"
+  }
+}

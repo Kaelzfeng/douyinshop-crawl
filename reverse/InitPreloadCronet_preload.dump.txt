@@ -1,0 +1,86 @@
+class Lcom/ss/android/ugc/aweme/legoImp/task/allProcessTask/InitPreloadCronet$preloadCronetSo$1; extends Ljava/lang/Object;
+
+public constructor <init>()V
+0000: invoke-direct        v0, Ljava/lang/Object;-><init>()V
+0001: return-void          
+
+public final synthetic doWork()Lcom/ss/android/ugc/nimbleworker/Worker$Result;
+0000: invoke-static        v1, Lcom/ss/android/ugc/aweme/lego/LegoTask$-CC;->$default$doWork(Lcom/ss/android/ugc/aweme/lego/LegoTask;)Lcom/ss/android/ugc/nimbleworker/Worker$Result;
+0001: move-result-object   v0
+0002: return-object        v0
+
+public final synthetic getCondition()Lcom/ss/android/ugc/nimbleworker/Condition;
+0000: invoke-static        v1, Lcom/ss/android/ugc/aweme/lego/LegoTask$-CC;->$default$getCondition(Lcom/ss/android/ugc/aweme/lego/LegoTask;)Lcom/ss/android/ugc/nimbleworker/Condition;
+0001: move-result-object   v0
+0002: return-object        v0
+
+public final synthetic getPriority()I
+0000: invoke-static        v1, Lcom/ss/android/ugc/aweme/lego/LegoTask$-CC;->$default$getPriority(Lcom/ss/android/ugc/aweme/lego/LegoTask;)I
+0001: move-result          v0
+0002: return               v0
+
+public final synthetic getResourceType()Lcom/ss/android/ugc/nimbleworker/ResourceType;
+0000: invoke-static        v1, Lcom/ss/android/ugc/aweme/lego/LegoTask$-CC;->$default$getResourceType(Lcom/ss/android/ugc/aweme/lego/LegoTask;)Lcom/ss/android/ugc/nimbleworker/ResourceType;
+0001: move-result-object   v0
+0002: return-object        v0
+
+public final synthetic getScheduleType()Lcom/ss/android/ugc/nimbleworker/ScheduleType;
+0000: invoke-static        v1, Lcom/ss/android/ugc/aweme/lego/LegoTask$-CC;->$default$getScheduleType(Lcom/ss/android/ugc/aweme/lego/LegoTask;)Lcom/ss/android/ugc/nimbleworker/ScheduleType;
+0001: move-result-object   v0
+0002: return-object        v0
+
+public final synthetic getState()I
+0000: invoke-static        v1, Lcom/ss/android/ugc/aweme/lego/LegoTask$-CC;->$default$getState(Lcom/ss/android/ugc/aweme/lego/LegoTask;)I
+0001: move-result          v0
+0002: return               v0
+
+public final synthetic getWorker()Lcom/ss/android/ugc/nimbleworker/Worker;
+0000: invoke-static        v1, Lcom/ss/android/ugc/aweme/lego/LegoComponent$-CC;->$default$getWorker(Lcom/ss/android/ugc/aweme/lego/LegoComponent;)Lcom/ss/android/ugc/nimbleworker/Worker;
+0001: move-object          v0, v1
+0002: return-object        v0
+
+public final key()Ljava/lang/String;
+0000: const-string         v0, "InitPreloadCronet.LegoTask1"
+0001: return-object        v0
+
+public final synthetic process()Lcom/ss/android/ugc/aweme/lego/ProcessType;
+0000: invoke-static        v1, Lcom/ss/android/ugc/aweme/lego/LegoTask$-CC;->$default$process(Lcom/ss/android/ugc/aweme/lego/LegoTask;)Lcom/ss/android/ugc/aweme/lego/ProcessType;
+0001: move-result-object   v0
+0002: return-object        v0
+
+public final run(Landroid/content/Context;)V
+0000: invoke-static        Landroid/os/SystemClock;->uptimeMillis()J
+0001: invoke-static        LX/03Kw;->LIZ()Z
+0002: move-result          v0
+0003: const-string         v2, "sscronet"
+0004: if-nez               v0, +012h
+0005: invoke-static        Lcom/ss/android/ugc/aweme/net/CronetDepeendAdapter;->isCronetPluginInstalled()Z
+0006: move-result          v0
+0007: if-eqz               v0, +00ch
+0008: invoke-static        Lcom/ss/android/ugc/aweme/plugin/OldPluginService;->LIZ()Lcom/bytedance/ies/ugc/aweme/plugin/service/IPluginService;
+0009: move-result-object   v1
+0010: const-string         v0, "com.bytedance.aweme.cronet.plugin"
+0011: invoke-interface     v1, v0, v2, Lcom/bytedance/ies/ugc/aweme/plugin/service/IPluginService;->loadLibrary(Ljava/lang/String; Ljava/lang/String;)Z
+0012: goto                 +4h
+0013: invoke-static        v2, Lcom/ss/android/ugc/aweme/net/preload/TTnetSoPreloadTask;->LIZ(Ljava/lang/String;)V
+0014: invoke-static        Landroid/os/SystemClock;->uptimeMillis()J
+0015: return-void          
+
+public final synthetic serialExecute()Z
+0000: invoke-static        v1, Lcom/ss/android/ugc/aweme/lego/LegoTask$-CC;->$default$serialExecute(Lcom/ss/android/ugc/aweme/lego/LegoTask;)Z
+0001: move-result          v0
+0002: return               v0
+
+public final synthetic targetProcess()I
+0000: invoke-static        v1, Lcom/ss/android/ugc/aweme/lego/LegoComponent$-CC;->$default$targetProcess(Lcom/ss/android/ugc/aweme/lego/LegoComponent;)I
+0001: move-result          v0
+0002: return               v0
+
+public final synthetic triggerType()Lcom/ss/android/ugc/aweme/lego/TriggerType;
+0000: invoke-static        v1, Lcom/ss/android/ugc/aweme/lego/LegoComponent$-CC;->$default$triggerType(Lcom/ss/android/ugc/aweme/lego/LegoComponent;)Lcom/ss/android/ugc/aweme/lego/TriggerType;
+0001: move-result-object   v0
+0002: return-object        v0
+
+public final type()Lcom/ss/android/ugc/aweme/lego/WorkType;
+0000: sget-object          v0, Lcom/ss/android/ugc/aweme/lego/WorkType;->BACKGROUND Lcom/ss/android/ugc/aweme/lego/WorkType;
+0001: return-object        v0

@@ -1,0 +1,59 @@
+﻿# 依赖目录
+node_modules/
+
+# 本地运行数据
+data/
+output/*
+!output/.gitkeep
+links.txt
+
+# 调试与缓存目录
+.claude/
+.playwright-cli/
+.playwright-mcp/
+__pycache__/
+**/__pycache__/
+.pytest_cache/
+.cache/
+
+# 日志与临时文件
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.pyc
+*.pyo
+*.pyd
+
+# 生成后的调试脚本包
+*.bundle.js
+
+# 本地证书与敏感运行材料
+mitmproxy-ca.0
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+.env
+.env.*
+
+# 大型逆向样本与反编译产物
+*.apk
+*.dex
+*.so
+*.jar
+*.zip
+reverse/jadx/
+reverse/samples/
+reverse/apk_extracted/
+reverse/partial_dex/
+reverse/target_dex/
+reverse/classes20_src/
+reverse/partial_src/
+reverse/security_src/
+reverse/single_classes/
+
+# 外部工具本地副本
+tools/ida-pro-mcp/
