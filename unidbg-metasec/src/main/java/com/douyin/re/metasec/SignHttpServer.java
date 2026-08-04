@@ -19,6 +19,7 @@ import java.util.Map;
  * HTTP sidecar compatible with src/native-sign.mjs
  *
  *   GET  /health
+ *   GET  /symbols
  *   POST /sign {url, headers, body}
  *
  * Default: http://127.0.0.1:17890
@@ -31,17 +32,26 @@ public final class SignHttpServer {
                 "METASEC_SO",
                 new File("../reverse/apk_extracted/lib/arm64-v8a/libmetasec_ml.so").getAbsolutePath()
         );
-        // allow CLI override: --so path --port 17890
+        String apkPath = System.getenv().getOrDefault(
+                "METASEC_APK",
+                new File("../reverse/samples/douyin-mall-39.6.0.apk").getAbsolutePath()
+        );
+
         for (int i = 0; i < args.length; i++) {
-            if ("--port".equals(args[i]) && i + 1 < args.length) {
-                port = Integer.parseInt(args[++i]);
-            } else if ("--so".equals(args[i]) && i + 1 < args.length) {
-                soPath = args[++i];
-            }
+            if ("--port".equals(args[i]) && i + 1 < args.length) port = Integer.parseInt(args[++i]);
+            else if ("--so".equals(args[i]) && i + 1 < args.length) soPath = args[++i];
+            else if ("--apk".equals(args[i]) && i + 1 < args.length) apkPath = args[++i];
+            else if ("--no-apk".equals(args[i])) apkPath = "";
         }
 
         File soFile = new File(soPath);
-        MetaSecEmulator emulator = MetaSecEmulator.create(soFile);
+        File apkFile = (apkPath == null || apkPath.isEmpty()) ? null : new File(apkPath);
+        if (apkFile != null && !apkFile.isFile()) {
+            System.out.println("[unidbg-metasec] APK missing, continuing without: " + apkFile.getAbsolutePath());
+            apkFile = null;
+        }
+
+        MetaSecEmulator emulator = MetaSecEmulator.create(soFile, apkFile);
         System.out.println("[unidbg-metasec] " + JSON.toJSONString(emulator.status()));
 
         HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 0);
@@ -52,6 +62,13 @@ public final class SignHttpServer {
             }
             Map<String, Object> st = emulator.status();
             writeJson(exchange, Boolean.TRUE.equals(st.get("ok")) ? 200 : 503, st);
+        });
+        server.createContext("/symbols", exchange -> {
+            if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+                writeJson(exchange, 405, mapOf("ok", false, "error", "method not allowed"));
+                return;
+            }
+            writeJson(exchange, 200, emulator.symbols());
         });
         server.createContext("/sign", exchange -> {
             if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
@@ -75,11 +92,12 @@ public final class SignHttpServer {
         server.createContext("/", exchange -> writeJson(exchange, 200, mapOf(
                 "service", "unidbg-metasec",
                 "mode", "unidbg",
-                "endpoints", new String[]{"GET /health", "POST /sign"}
+                "endpoints", new String[]{"GET /health", "GET /symbols", "POST /sign"}
         )));
         server.start();
         System.out.println("[unidbg-metasec] listening http://127.0.0.1:" + port);
         System.out.println("[unidbg-metasec] SO=" + soFile.getAbsolutePath());
+        System.out.println("[unidbg-metasec] APK=" + (apkFile == null ? "(none)" : apkFile.getAbsolutePath()));
 
         Runtime.getRuntime().addShutdownHook(new Thread(emulator::close));
     }

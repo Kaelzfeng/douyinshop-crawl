@@ -54,10 +54,14 @@ async function main() {
         businessStatus: page.businessStatus,
         products: page.productsInPage,
         signed_headers: page.signedHeaders,
+        f3_io: page.lastWire?.f3_io || wire?.f3_io || [],
+        metasec_handle: page.lastWire?.metasec_handle || wire?.metasec_handle || null,
         wire,
-        body_md5: createHash('md5').update('').digest('hex'),
+        body_md5: createHash('md5').update(String(wire?.body || '')).digest('hex'),
       });
-      console.log(`pair ${i + 1}/${opts.count} cursor=${cursor} products=${page.productsInPage} keys=${Object.keys(page.signedHeaders || {}).join(',')}`);
+      const f3n = (page.lastWire?.f3_io || wire?.f3_io || []).length;
+      const handle = page.lastWire?.metasec_handle?.handle || wire?.metasec_handle?.handle || '?';
+      console.log(`pair ${i + 1}/${opts.count} cursor=${cursor} products=${page.productsInPage} f3_events=${f3n} handle=${handle} keys=${Object.keys(page.signedHeaders || {}).join(',')}`);
       if (!page.hasMore || !page.nextCursor || page.nextCursor === cursor) break;
       cursor = page.nextCursor;
     }

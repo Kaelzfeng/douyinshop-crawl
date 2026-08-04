@@ -316,13 +316,115 @@ rpc.exports = {
   },
 
   /**
+   * Read MetaSec native handle from installed provider (ms.bd.c.y4 -> z4.LIZ).
+   */
+  async getMetaSecHandle() {
+    return withJava(() => {
+      try {
+        const NetworkParams = Java.use(NETWORK_PARAMS);
+        const provider = getProvider(NetworkParams);
+        if (!provider) return { ok: false, error: 'provider not installed' };
+        const providerClass = String(provider.getClass().getName());
+        let handle = null;
+        try {
+          // y4.LIZ is z4; z4.LIZ is long handle
+          const y4 = Java.cast(provider, Java.use('ms.bd.c.y4'));
+          const z4 = y4.LIZ.value;
+          handle = String(z4.LIZ.value);
+        } catch (e) {
+          return { ok: false, providerClass, error: safeString(e) };
+        }
+        return { ok: true, providerClass, handle };
+      } catch (e) {
+        return { ok: false, error: safeString(e) };
+      }
+    });
+  },
+
+  /**
    * Sign a URL only (no HTTP request). Returns the signed headers.
-   * Useful for Node-side HTTP with Frida-signed headers.
+   * Optionally captures f3.a I/O when MetaSec is hooked for this call.
    */
   async signOnly(url, headers) {
     return withJava(() => {
-      const signed = signUrlHeaders(url, headers || {});
+      const f3Io = [];
+      let f3Hooked = false;
+      let originalF3 = null;
+      try {
+        const F3 = Java.use('ms.bd.c.f3');
+        originalF3 = F3.a.overload('int', 'int', 'long', 'java.lang.String', 'java.lang.Object');
+        originalF3.implementation = function (op, arg, handle, text, payload) {
+          const result = originalF3.call(F3, op, arg, handle, text, payload);
+          if (op === 50331649 || op === 100663297 || op === 0x03000001) {
+            const values = [];
+            const inputPairs = [];
+            try {
+              if (payload !== null) {
+                const ReflectArray = Java.use('java.lang.reflect.Array');
+                // payload may be String[]
+                try {
+                  const len = ReflectArray.getLength(payload);
+                  for (let i = 0; i < len; i++) {
+                    inputPairs.push(String(ReflectArray.get(payload, i)));
+                  }
+                } catch (_) {
+                  // ArrayList?
+                  try {
+                    const list = Java.cast(payload, Java.use('java.util.List'));
+                    for (let i = 0; i < list.size(); i++) inputPairs.push(String(list.get(i)));
+                  } catch (__) {}
+                }
+              }
+            } catch (_) {}
+            if (result !== null) {
+              try {
+                const ReflectArray = Java.use('java.lang.reflect.Array');
+                const length = ReflectArray.getLength(result);
+                for (let i = 0; i < length; i++) values.push(String(ReflectArray.get(result, i)));
+              } catch (error) {
+                values.push('_decodeError=' + safeString(error));
+              }
+            }
+            f3Io.push({
+              op,
+              arg,
+              handle: String(handle),
+              text: text === null ? null : String(text),
+              input_pairs: inputPairs,
+              output_pairs: values,
+            });
+          }
+          return result;
+        };
+        f3Hooked = true;
+      } catch (_) {}
+
+      let signed = {};
+      let signError = '';
+      try {
+        signed = signUrlHeaders(url, headers || {});
+      } catch (e) {
+        signError = safeString(e);
+      }
+
+      if (f3Hooked && originalF3) {
+        try { originalF3.implementation = null; } catch (_) {}
+      }
+
       const cookieInfo = collectCookiesForUrl(url);
+      let handleInfo = null;
+      try {
+        const NetworkParams = Java.use(NETWORK_PARAMS);
+        const provider = getProvider(NetworkParams);
+        if (provider) {
+          const y4 = Java.cast(provider, Java.use('ms.bd.c.y4'));
+          handleInfo = {
+            providerClass: String(provider.getClass().getName()),
+            handle: String(y4.LIZ.value.LIZ.value),
+          };
+        }
+      } catch (_) {}
+
       lastWireSnapshot = {
         captured_at: Date.now(),
         url: String(url || ''),
@@ -333,12 +435,18 @@ rpc.exports = {
         request_headers: { ...(headers || {}), ...signed },
         cookie_header: cookieInfo.cookie_header,
         cookies: cookieInfo.cookies,
+        f3_io: f3Io,
+        metasec_handle: handleInfo,
+        sign_error: signError || undefined,
       };
       return {
         url: String(url || ''),
         headers: signed,
         cookie_header: cookieInfo.cookie_header,
         cookies: cookieInfo.cookies,
+        f3_io: f3Io,
+        metasec_handle: handleInfo,
+        sign_error: signError || undefined,
         wire: lastWireSnapshot,
       };
     });

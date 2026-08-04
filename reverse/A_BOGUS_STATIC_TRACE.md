@@ -102,3 +102,23 @@ libsscronet.so (Cronet网络引擎)
 5. 有了已知输入/输出对 → 用 Ghidra 从函数偏移开始反编译 → 比纯静态高效 10x
 
 **纯静态完全可行，但需要 Ghidra/IDA 替代手工 hex 浏览。**
+
+## Unidbg 动态探测更新（2026-08）
+
+在 `unidbg-metasec` 中加载 `libmetasec_ml.so`（无 APK）实测：
+
+| 项 | 值 |
+|----|-----|
+| module_base | `0x40000000` |
+| module_size | `5783552` |
+| **JNI_OnLoad 导出** | ✅ `module_base + 0x28f03c` → 与静态 VA `0x28f03c` 一致 |
+| getEncodedP 导出 | ❌ 无符号（仅 `.rodata` 字符串 `@0xc35d4`） |
+| Java_ms_bd_c_f3_a 导出 | ❌（应为 RegisterNatives 动态注册） |
+| callJNI_OnLoad | ❌ `Illegal JNI version: 0xffffffff`（反调试/环境校验） |
+
+结论：
+
+1. 入口 `JNI_OnLoad` 偏移已锁定：`SO+0x28f03c`。
+2. 签名 native 不靠标准 JNI 导出名，必须走 **RegisterNatives** 或从 `f3.a` 动态指针反推。
+3. 离线 `JNI_OnLoad` 需先过 MetaSec 环境检测；短期生产签名继续用 Frida 桥。
+4. Frida 侧已增强：`signOnly` 可记录 `f3_io` + `metasec_handle`（`z4.LIZ`），见 `npm run sign:dump-pairs`。

@@ -66,11 +66,22 @@ NetworkParams.LJIILLIIL(url, Map<String,List<String>>)
 npm run sign:dump-pairs -- --query 运动鞋 --count 20
 ```
 
+### 当前进度
+
+| 步骤 | 状态 |
+|------|------|
+| SO load | ✅ `module_base` 可见 |
+| 可选 APK context | ✅ `--apk` / `METASEC_APK` |
+| `JNI_OnLoad` | ⚠️ 已尝试，结果看 `/health` |
+| 符号探测 | ✅ `GET /symbols`（`getEncodedP` 多半无导出，仅有 rodata 字符串 @0xc35d4） |
+| `f3.a(0x03000001,…)` | ⚠️ 实验调用；无真实 handle 时通常失败 |
+| 与 Frida 对齐 | 用 `npm run sign:dump-pairs` 采 `f3_io` + `metasec_handle` |
+
 ### 当前缺口
 
-1. MetaSec **handle / provider 初始化**（无 App 上下文时 `LJIILLIIL` 为空）
-2. `f3.a` / `getEncodedP` 在 Unidbg 中的可调用入口
-3. 与 Frida `signOnly` 的 header 逐字段对齐
+1. MetaSec **handle / provider 初始化**（离线无 App 时 handle=0）
+2. `getEncodedP` 函数体偏移（字符串在 0xc35d4，需 Ghidra XREF）
+3. 用 Frida 样本反推 Unidbg 可复现路径
 
 ## 验收
 
