@@ -75,11 +75,22 @@ function parseOptions(argv = process.argv.slice(2)) {
       'no-shorten': { type: 'boolean', default: false },
       'single-page': { type: 'boolean', default: false },
       serial: { type: 'string', default: 'emulator-5554' },
+      'sign-mode': { type: 'string', default: 'app_proxy' },
+      session: { type: 'string', default: path.join(ROOT, 'output', 'session.json') },
+      'device-params': { type: 'string', default: path.join(ROOT, 'output', 'device-params.json') },
+      enrich: { type: 'boolean', default: false },
+      'no-enrich': { type: 'boolean', default: false },
+      'dump-wire': { type: 'boolean', default: false },
       help: { type: 'boolean', short: 'h', default: false },
     },
     allowPositionals: false,
     strict: true,
   });
+
+  const signMode = String(values['sign-mode'] || 'app_proxy').trim();
+  if (!['app_proxy', 'frida_rpc', 'local'].includes(signMode)) {
+    throw new Error(`--sign-mode must be app_proxy|frida_rpc|local (got ${signMode})`);
+  }
 
   return {
     keywords: resolveKeywords(values),
@@ -94,6 +105,11 @@ function parseOptions(argv = process.argv.slice(2)) {
     noShorten: values['no-shorten'],
     singlePage: values['single-page'],
     serial: values.serial,
+    signMode,
+    sessionPath: path.resolve(values.session),
+    deviceParamsPath: path.resolve(values['device-params']),
+    enrich: values.enrich && !values['no-enrich'],
+    dumpWire: values['dump-wire'],
     help: values.help,
   };
 }
@@ -125,10 +141,19 @@ Options:
   --no-shorten            Skip short link generation
   --single-page           Only fetch one page (for testing)
   --serial <id>           Frida device serial (default: emulator-5554)
+  --sign-mode <mode>      app_proxy (default) | frida_rpc | local
+  --session <path>        Session JSON from export-app-session (default: output/session.json)
+  --device-params <path>  Device params JSON (default: output/device-params.json)
+  --enrich                Backfill missing shop/sales via H5 pack (needs a_bogus/browser)
+  --dump-wire             Save last wire/sign headers after first page
   -h, --help              Show this help
 
-No ADB UI automation. Search requests go through the app network stack
-(Frida app-proxy). Requires MuMu + logged-in Douyin Mall + Frida.
+sign-mode:
+  app_proxy  Frida makes HTTP inside the app (most reliable today)
+  frida_rpc  Frida only signs; Node fetch (needs session cookies)
+  local      Unidbg/MetaSec sidecar; no Frida (experimental)
+
+No ADB UI automation. Requires MuMu + logged-in app for app_proxy/frida_rpc.
 `;
 }
 
@@ -227,14 +252,21 @@ async function main() {
   console.log(`Keywords: ${options.keywords.join(', ')}`);
   console.log(`DB: ${options.dbPath}`);
   console.log(`Output: ${options.outputPath}`);
+  console.log(`Sign mode: ${options.signMode}`);
   console.log(`Mode: ${options.singlePage ? 'single page' : (options.all ? 'all pages' : `${options.maxPages} pages max`)}`);
 
   let client;
   try {
-    client = await createDirectSearchClient({ serial: options.serial, useAppProxy: true });
+    client = await createDirectSearchClient({
+      serial: options.serial,
+      signMode: options.signMode,
+      useAppProxy: options.signMode === 'app_proxy',
+      sessionPath: options.sessionPath,
+      deviceParamsPath: options.deviceParamsPath,
+    });
   } catch (err) {
-    console.error('Failed to connect to app:', err.message);
-    console.error('Make sure the Douyin Mall app is running and Frida is connected.');
+    console.error('Failed to start client:', err.message);
+    console.error('app_proxy/frida_rpc need Douyin Mall + Frida; local needs MetaSec sidecar.');
     process.exit(1);
   }
 
@@ -309,6 +341,16 @@ async function main() {
         ].join(' ');
         console.log(`  ${statusLine}`);
 
+        if (options.dumpWire && pages === 1) {
+          const wirePath = path.join(OUT_DIR, 'wire-headers-sample.json');
+          const wire = result.lastWire || await client.getLastWire();
+          fs.writeFileSync(wirePath, `${JSON.stringify(wire || {
+            signed_headers: result.signedHeaders,
+            note: 'no wire snapshot',
+          }, null, 2)}\n`, 'utf8');
+          console.log(`  wire dump: ${wirePath}`);
+        }
+
         allStats.push({
           keyword,
           cursor,
@@ -347,6 +389,65 @@ async function main() {
     }
   } finally {
     await client.close();
+  }
+
+  // Optional H5 pack enrich for missing shop/sales (Phase B; needs browser a_bogus)
+  let enrichStats = null;
+  if (options.enrich && grandTotal > 0) {
+    console.log('\n--- H5 Field Enrichment ---');
+    try {
+      const { createABogusSigner } = await import('./a-bogus.mjs');
+      const { fetchH5Detail } = await import('./direct-api-enrich.mjs');
+      const incomplete = store.all(`
+        SELECT product_id, product_name, shop_name, price, sales
+        FROM products
+        WHERE trim(product_id) <> ''
+          AND (trim(coalesce(shop_name,'')) = '' OR trim(coalesce(sales,'')) = '')
+        LIMIT 50
+      `);
+      console.log(`Incomplete rows to enrich (max 50): ${incomplete.length}`);
+      if (incomplete.length) {
+        const signer = await createABogusSigner();
+        let filled = 0;
+        try {
+          for (const row of incomplete) {
+            try {
+              const detail = await fetchH5Detail(row.product_id, signer);
+              if (!detail) continue;
+              const shop = detail['店铺名'] || detail.shop_name || '';
+              const sales = detail['销量'] || detail.sales || '';
+              const name = detail['商品品名'] || detail.product_name || detail.title || '';
+              const price = detail['价格'] || detail.price || '';
+              if (shop || sales || name || price) {
+                store.record(makeEvent({
+                  run_id: runId,
+                  event: 'product_found',
+                  stage: 'h5_enrich',
+                  source: 'h5_pack',
+                  ts: Date.now(),
+                  product_id: row.product_id,
+                  product_name: name || row.product_name,
+                  title: name || row.product_name,
+                  shop_name: shop || row.shop_name,
+                  price: price || row.price,
+                  sales: sales || row.sales,
+                }));
+                filled += 1;
+              }
+            } catch (err) {
+              console.warn(`  enrich fail ${row.product_id}: ${err.message}`);
+            }
+          }
+        } finally {
+          await signer.close().catch(() => {});
+        }
+        enrichStats = { attempted: incomplete.length, filled };
+        console.log(`Enriched: ${filled}/${incomplete.length}`);
+      }
+    } catch (err) {
+      console.warn(`[enrich] skipped: ${err.message}`);
+      enrichStats = { error: String(err.message || err) };
+    }
   }
 
   // Short link generation
@@ -409,7 +510,7 @@ async function main() {
   // Summary
   const summary = {
     mode: 'direct-search-api',
-    sign_mode: 'app_proxy',
+    sign_mode: options.signMode,
     keywords: options.keywords,
     pages_total: allStats.length,
     unique_products: rows.length,
@@ -418,6 +519,7 @@ async function main() {
     incomplete_rows: rows.length - completeRows.length,
     complete_csv_rows: completeRows.length,
     ...missing,
+    enrich: enrichStats,
     shorten: shortenStats,
     db: options.dbPath,
     output: options.outputPath,

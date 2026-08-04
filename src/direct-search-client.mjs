@@ -18,8 +18,12 @@
 import frida from 'frida';
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { extractProductFields } from './product-field-normalizers.mjs';
+import { loadSession, sessionRequestHeaders } from './session.mjs';
+import { resolveDeviceParams } from './device-params.mjs';
+import { createNativeSignClient } from './native-sign.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BUNDLE_PATH = path.resolve(__dirname, '..', 'hook', 'direct-search-agent.bundle.js');
@@ -28,53 +32,11 @@ const SEARCH_ENDPOINT = 'https://ecom.ecombdapi.com/aweme/v3/shop/search/aggrega
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, Math.max(0, ms)));
 
-// ---------------------------------------------------------------------------
-// Device parameter templates
-// ---------------------------------------------------------------------------
+/** @typedef {'app_proxy'|'frida_rpc'|'local'} SignMode */
 
-/** Static device params that don't change between requests. */
-const STATIC_PARAMS = {
-  iid: '3454002414781424',
-  device_id: '3700291608266259',
-  ac: 'wifi',
-  channel: 'huawei_561124_64',
-  aid: '561124',
-  app_name: 'douyinecommerce',
-  version_code: '390600',
-  version_name: '39.6.0',
-  device_platform: 'android',
-  os: 'android',
-  ssmix: 'a',
-  device_type: 'MI 5s',
-  device_brand: 'Xiaomi',
-  language: 'zh',
-  os_api: '35',
-  os_version: '15',
-  manifest_version_code: '390601',
-  resolution: '900*1600',
-  dpi: '240',
-  update_version_code: '39609900',
-  package: PACKAGE_NAME,
-  mcc_mnc: '46000',
-  first_launch_timestamp: '1784347027',
-  last_deeplink_update_version_code: '39609900',
-  cpu_support64: 'true',
-  host_abi: 'arm64-v8a',
-  is_guest_mode: '0',
-  app_type: 'normal',
-  minor_status: '0',
-  appTheme: 'light',
-  is_preinstall: '0',
-  need_personal_recommend: '1',
-  is_android_pad: '0',
-  is_android_fold: '0',
-};
-
-/** Semi-static params (change per session, not per request). */
-const SESSION_PARAMS = {
-  cdid: '1921388f-1cdc-4639-b4da-7cccbfe0dcae',
-  klink_egdi: 'AAKnjetLF-f7tX5bmBTodVF8RbvQmjJ-iCJck8FNYiUF3JqrpadUdDrm',
-};
+function bodyStub(body) {
+  return createHash('md5').update(String(body || ''), 'utf8').digest('hex').toUpperCase();
+}
 
 // ---------------------------------------------------------------------------
 // TTNet streaming response dechunking
@@ -445,77 +407,123 @@ export function parseSearchResponse(body, requestCursor = '0') {
 // ---------------------------------------------------------------------------
 
 /**
- * Create a direct search client connected to the running Douyin Mall app.
+ * Create a direct search client.
  *
  * @param {object} [opts]
  * @param {string} [opts.serial='emulator-5554']
  * @param {string} [opts.fridaHost='127.0.0.1:27042']
- * @param {string} [opts.bundlePath] — override Frida bundle path
- * @param {boolean} [opts.useAppProxy=true] — true = app makes HTTP request; false = Frida signs, Node sends
- * @returns {Promise<DirectSearchClient>}
+ * @param {string} [opts.bundlePath]
+ * @param {boolean} [opts.useAppProxy=true] — legacy alias for signMode
+ * @param {'app_proxy'|'frida_rpc'|'local'} [opts.signMode]
+ * @param {string} [opts.sessionPath]
+ * @param {string} [opts.deviceParamsPath]
+ * @param {string} [opts.nativeSignerUrl]
  */
 export async function createDirectSearchClient({
   serial = 'emulator-5554',
   fridaHost = '127.0.0.1:27042',
   bundlePath = null,
   useAppProxy = true,
+  signMode = null,
+  sessionPath = 'output/session.json',
+  deviceParamsPath = 'output/device-params.json',
+  nativeSignerUrl = process.env.METASEC_SIGNER_URL || 'http://127.0.0.1:17890',
 } = {}) {
-  const bundle = bundlePath || BUNDLE_PATH;
-  if (!fs.existsSync(bundle)) {
-    throw new Error(`Frida bundle not found: ${bundle}. Run: npx frida-compile hook/direct-search-agent.js -o hook/direct-search-agent.bundle.js -B iife -S`);
+  /** @type {'app_proxy'|'frida_rpc'|'local'} */
+  let mode = signMode || (useAppProxy ? 'app_proxy' : 'frida_rpc');
+  if (!['app_proxy', 'frida_rpc', 'local'].includes(mode)) {
+    throw new Error(`Invalid signMode=${mode}`);
   }
 
-  let script;
-  let session;
-  let device;
-  let proxyMode = useAppProxy;
-
-  // Connect
-  const devices = await frida.enumerateDevices();
-  device = devices.find((d) => d.id === serial) || devices.find((d) => d.type === 'usb');
-  if (!device) {
-    device = await frida.getDeviceManager().addRemoteDevice(fridaHost);
-  }
-
-  const processes = await device.enumerateProcesses({ scope: 'full' });
-  const proc = processes.find((p) =>
-    (p.parameters?.applications || []).includes(PACKAGE_NAME),
-  ) || processes.find((p) => {
-    const n = p.name || '';
-    return n === '抖音商城' || n.includes('livelite');
+  const appSession = loadSession(sessionPath);
+  const deviceResolved = resolveDeviceParams({
+    deviceParamsPath,
+    session: appSession,
   });
-
-  if (!proc) throw new Error('Douyin Mall process not found. Start the app first.');
-
-  session = await device.attach(proc.pid);
-  script = await session.createScript(fs.readFileSync(bundle, 'utf8'));
-  await script.load();
-  await sleep(500);
-
-  // Verify signer
-  const status = await script.exports.status();
-  if (!status.ok || !status.providerInstalled) {
-    // Signer might not be loaded yet; try app-proxy mode
-    console.warn('[direct-search] NetworkParams signer not ready, using app-proxy mode');
-    proxyMode = true;
+  if (deviceResolved.usedFallback) {
+    console.warn('[direct-search] Using fallback device params; run: node tools/export-app-session.mjs');
+  } else {
+    console.log(`[direct-search] Device params source=${deviceResolved.source}`);
+  }
+  if (appSession?.cookie_header) {
+    console.log(`[direct-search] Session cookies loaded (${Object.keys(appSession.cookies || {}).length} keys)`);
+  } else if (mode !== 'app_proxy') {
+    console.warn('[direct-search] No session cookies; L2/local may fail until export-app-session');
   }
 
-  console.log(`[direct-search] Connected pid=${proc.pid} mode=${proxyMode ? 'app-proxy' : 'frida-sign'}`);
+  const STATIC_PARAMS = deviceResolved.staticParams;
+  const SESSION_PARAMS = deviceResolved.sessionParams;
 
-  /**
-   * Build a search URL with current dynamic parameters.
-   */
+  let script = null;
+  let fridaSession = null;
+  let device = null;
+  let nativeSigner = null;
+  let lastWire = null;
+
+  async function ensureFrida() {
+    if (script) return;
+    const bundle = bundlePath || BUNDLE_PATH;
+    if (!fs.existsSync(bundle)) {
+      throw new Error(`Frida bundle not found: ${bundle}. Run: npm run build:direct-search`);
+    }
+
+    const devices = await frida.enumerateDevices();
+    device = devices.find((d) => d.id === serial) || devices.find((d) => d.type === 'usb');
+    if (!device) {
+      device = await frida.getDeviceManager().addRemoteDevice(fridaHost);
+    }
+
+    const processes = await device.enumerateProcesses({ scope: 'full' });
+    const proc = processes.find((p) =>
+      (p.parameters?.applications || []).includes(PACKAGE_NAME),
+    ) || processes.find((p) => {
+      const n = p.name || '';
+      return n === '抖音商城' || n.includes('livelite');
+    });
+
+    if (!proc) throw new Error('Douyin Mall process not found. Start the app first.');
+
+    fridaSession = await device.attach(proc.pid);
+    script = await fridaSession.createScript(fs.readFileSync(bundle, 'utf8'));
+    await script.load();
+    await sleep(500);
+
+    const status = await script.exports.status();
+    if (!status.ok || !status.providerInstalled) {
+      console.warn('[direct-search] NetworkParams signer not ready');
+      if (mode === 'frida_rpc') {
+        console.warn('[direct-search] Falling back to app_proxy');
+        mode = 'app_proxy';
+      }
+    }
+    console.log(`[direct-search] Frida attached pid=${proc.pid}`);
+  }
+
+  if (mode === 'local') {
+    nativeSigner = createNativeSignClient({ baseUrl: nativeSignerUrl });
+    const health = await nativeSigner.health();
+    if (!health.ok) {
+      throw new Error(
+        `local sign mode requires MetaSec sidecar at ${nativeSignerUrl} (${health.error || health.status}). `
+        + 'Start unidbg-metasec or use --sign-mode app_proxy|frida_rpc',
+      );
+    }
+    console.log(`[direct-search] Local signer ready at ${nativeSignerUrl}`);
+  } else {
+    await ensureFrida();
+  }
+
+  console.log(`[direct-search] mode=${mode}`);
+
   function buildSearchUrl(cursor = '0', count = 20) {
     const ts = Math.floor(Date.now() / 1000);
     const _rticket = Date.now();
-
     const params = new URLSearchParams({
       ...STATIC_PARAMS,
       ...SESSION_PARAMS,
       ts: String(ts),
       _rticket: String(_rticket),
     });
-
     return `${SEARCH_ENDPOINT}?${params.toString()}`;
   }
 
@@ -561,19 +569,39 @@ export async function createDirectSearchClient({
 
     let httpStatus;
     let responseBody;
+    let signedHeaders = {};
 
-    if (proxyMode) {
-      // App-internal HTTP request (all signing handled by NetworkParams + Cronet)
-      const resp = await script.exports.search(url, body, {});
+    if (mode === 'app_proxy') {
+      await ensureFrida();
+      const resp = await script.exports.search(url, body, sessionRequestHeaders(appSession));
       httpStatus = resp.status;
       responseBody = resp.body;
+      signedHeaders = resp.signed_headers || {};
+      lastWire = resp.wire || null;
     } else {
-      // Frida signs → Node sends HTTP
-      const signed = await script.exports.signOnly(url, {});
-      const headers = {
+      // frida_rpc or local: Node sends HTTP
+      const baseHeaders = sessionRequestHeaders(appSession, {
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
         'User-Agent': 'com.ss.android.ugc.livelite/390600',
-        ...(signed.headers || {}),
+        'X-SS-STUB': bodyStub(body),
+      });
+
+      if (mode === 'frida_rpc') {
+        await ensureFrida();
+        const signed = await script.exports.signOnly(url, baseHeaders);
+        signedHeaders = signed.headers || {};
+        lastWire = signed.wire || null;
+        if (signed.cookie_header && !baseHeaders.Cookie) {
+          baseHeaders.Cookie = signed.cookie_header;
+        }
+      } else {
+        const signed = await nativeSigner.sign(url, baseHeaders, body);
+        signedHeaders = signed.headers || {};
+      }
+
+      const headers = {
+        ...baseHeaders,
+        ...signedHeaders,
       };
 
       const controller = new AbortController();
@@ -606,7 +634,9 @@ export async function createDirectSearchClient({
       products: parsed.products,
       productsInPage: parsed.products.length,
       responseBytes: (responseBody || '').length,
-      signMode: proxyMode ? 'app_proxy' : 'frida_rpc',
+      signMode: mode,
+      signedHeaders,
+      lastWire,
       elapsedMs: elapsed,
       rawResponse: parsed.rawResponse,
       rawBody: parsed.rawBody,
@@ -700,16 +730,37 @@ export async function createDirectSearchClient({
       await script.unload().catch(() => {});
       script = null;
     }
-    if (session) {
-      await session.detach().catch(() => {});
-      session = null;
+    if (fridaSession) {
+      await fridaSession.detach().catch(() => {});
+      fridaSession = null;
+    }
+  }
+
+  async function exportSessionFromApp() {
+    await ensureFrida();
+    return script.exports.exportSession();
+  }
+
+  async function getLastWire() {
+    if (lastWire) return lastWire;
+    if (!script) return null;
+    try {
+      return await script.exports.getLastWire();
+    } catch {
+      return null;
     }
   }
 
   return {
     searchPage,
     searchAllPages,
-    status: () => script.exports.status(),
+    exportSessionFromApp,
+    getLastWire,
+    getSignMode: () => mode,
+    status: async () => {
+      if (!script) return { ok: mode === 'local', mode };
+      return script.exports.status();
+    },
     close,
   };
 }

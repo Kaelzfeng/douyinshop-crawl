@@ -7,6 +7,13 @@ output/*
 !output/.gitkeep
 links.txt
 
+# 会话/设备身份（含 Cookie，禁止入库）
+output/session.json
+output/device-params.json
+**/session.json
+**/device-params.json
+output/sign-pairs/
+
 # 调试与缓存目录
 .claude/
 .playwright-cli/

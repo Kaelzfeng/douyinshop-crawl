@@ -16,14 +16,37 @@ product_id,product_name,shop_name,price,sales,share_url
 
 ```text
 你指定的关键词
-  -> Frida app-proxy（App 内发搜索请求）
+  -> 签名模式（见下）
   -> 搜索聚合 API 翻页
   -> SQLite 去重
   -> 官方 POST /shorten/ 补短链
   -> products.csv
 ```
 
-无 ADB 点搜索/滚动/分享。模拟器只提供登录会话与签名环境。
+无 ADB 点搜索/滚动/分享。
+
+### 签名模式（纯逆向路径）
+
+| `--sign-mode` | 行为 | 依赖 |
+|---------------|------|------|
+| `app_proxy`（默认） | Frida 在 App 内发 HTTP + 签名 | MuMu + 登录 + Frida |
+| `frida_rpc` | Frida 只签名，Node `fetch` 出站 | 同上 + `output/session.json` Cookie |
+| `local` | Unidbg MetaSec 侧车签名，无 Frida | `session.json` + `unidbg-metasec` 服务 |
+
+```powershell
+# 从 App 导出 Cookie / 设备参数（L2/L3 底座）
+npm run build:direct-search
+npm run session:export
+
+# 对照 app_proxy vs frida_rpc
+npm run search:compare -- --query 运动鞋
+
+# 生产采集（最稳）
+npm start -- --query 运动鞋 --all --sign-mode app_proxy
+
+# L2 实验
+npm start -- --query 运动鞋 --single-page --sign-mode frida_rpc --dump-wire
+```
 
 ## 环境
 
@@ -74,7 +97,25 @@ npm start -- --all
 | `--output <path>` | CSV 路径 |
 | `--db <path>` | SQLite 路径 |
 | `--serial <id>` | 设备 serial |
+| `--sign-mode <m>` | `app_proxy` / `frida_rpc` / `local` |
+| `--session <path>` | 会话 JSON（默认 `output/session.json`） |
+| `--device-params <path>` | 设备参数 JSON |
+| `--dump-wire` | 首屏后导出 wire headers |
+| `--enrich` | 缺字段时 H5 补全（实验） |
 | `-h, --help` | 帮助 |
+
+### 纯逆向相关模块
+
+| 路径 | 作用 |
+|------|------|
+| `src/session.mjs` | Cookie/token 会话 |
+| `src/device-params.mjs` | 设备 query 参数 |
+| `src/native-sign.mjs` | Unidbg 侧车客户端 |
+| `src/a-bogus-vm.mjs` | 无浏览器 a_bogus（实验） |
+| `tools/export-app-session.mjs` | Frida 导出会话 |
+| `tools/compare-search-modes.mjs` | L1/L2 对照 |
+| `tools/dump-sign-pairs.mjs` | 签名 I/O 样本 |
+| `unidbg-metasec/` | 本地 MetaSec（脚手架） |
 
 ```powershell
 npm start -- --help

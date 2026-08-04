@@ -277,25 +277,33 @@
 
 ### 立即可做（低成本）
 
-- [ ] Frida Gadget 注入 APK → 解除 ptrace 限制
-- [ ] 全量 HTTP 抓包（搜索→浏览→详情）→ 识别搜索 API
-- [ ] 验证搜索 API 是否只需要 a_bogus
-- [ ] 尝试 Node.js `vm` 模块加载 bdms bundle
+- [x] 搜索 API 识别 + `src/direct-search-client.mjs`（app_proxy 已生产验证）
+- [x] 官方短链纯 HTTP（`src/official-shortener.mjs`）
+- [x] 会话/设备导出骨架（`tools/export-app-session.mjs`, `src/session.mjs`, `src/device-params.mjs`）
+- [x] L2 模式入口（`--sign-mode frida_rpc`）+ 对照工具 `tools/compare-search-modes.mjs`
+- [x] wire header 分类文档骨架 `output/direct-search/header-classification.md`
+- [x] Node vm 加载 bdms 尝试（`src/a-bogus-vm.mjs`，失败则回退浏览器）
+- [ ] Frida Gadget 注入 APK → 解除 ptrace 限制（运维向）
+- [ ] 用 compare 工具在真机上钉死 L2 最小 header 集
 
 ### 短期（1-2 周）
 
-- [ ] 实现 `direct-search.mjs`（搜索 API + pack API + shorten API）
-- [ ] Unidbg 加载 `libmetasec_ml.so` 验证 getEncodedP
+- [x] direct-search CLI + 翻页 + 短链
+- [ ] `frida_rpc` 多页稳定（Cookie + 完整 signOnly 头）
+- [ ] Unidbg 加载 `libmetasec_ml.so` 验证 getEncodedP（见 `unidbg-metasec/`）
 - [ ] 确认 verifyFp 生成路径（bdms 深处或 app 逻辑）
+- [ ] 搜索缺字段 H5 enrich 接入 CLI `--enrich`
 
 ### 中期（2-4 周）
 
-- [ ] Unidbg → 纯代码签名服务（HTTP wrapper）
+- [ ] Unidbg → HTTP sidecar（`src/native-sign.mjs` 已预留客户端）
+- [ ] `--sign-mode local` 无 Frida 跑通 ≥1 页
+- [ ] Session 过期检测与重新导出自动化
 - [ ] 完整 API 端点文档化
-- [ ] Session 自动化管理
 
 ### 长期
 
 - [ ] Ghidra/IDA 完全还原 `getEncodedP` 算法
+- [ ] 默认入口切到 local（仅当 M3 验收通过）
 - [ ] 纯代码 X-Gorgon/X-Argus/X-Khronos + verifyFp
 - [ ] 零依赖纯 HTTP 采集系统

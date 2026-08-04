@@ -108,6 +108,62 @@ function getProvider(NetworkParams) {
 // HTTP request from within the app
 // ---------------------------------------------------------------------------
 
+/** Last successful sign/wire snapshot for Node-side classification dumps. */
+let lastWireSnapshot = null;
+
+function collectCookiesForUrl(url) {
+  const cookies = {};
+  const cookieHeaderParts = [];
+
+  try {
+    const CookieManager = Java.use('android.webkit.CookieManager');
+    const cm = CookieManager.getInstance();
+    const raw = safeString(cm.getCookie(String(url || 'https://ecom.ecombdapi.com/')));
+    if (raw) {
+      cookieHeaderParts.push(raw);
+      for (const part of raw.split(';')) {
+        const idx = part.indexOf('=');
+        if (idx > 0) {
+          const k = part.slice(0, idx).trim();
+          const v = part.slice(idx + 1).trim();
+          if (k) cookies[k] = v;
+        }
+      }
+    }
+  } catch (_) {}
+
+  try {
+    const handler = Java.use('java.net.CookieHandler').getDefault();
+    if (handler) {
+      const URI = Java.use('java.net.URI');
+      const uri = URI.create(String(url || 'https://ecom.ecombdapi.com/'));
+      const HashMap = Java.use('java.util.HashMap');
+      const empty = HashMap.$new();
+      const map = handler.get(uri, empty);
+      const obj = mapToListOfStrings(map);
+      for (const [k, v] of Object.entries(obj || {})) {
+        if (String(k).toLowerCase() === 'cookie' && v) {
+          cookieHeaderParts.push(String(v));
+        }
+      }
+    }
+  } catch (_) {}
+
+  return {
+    cookie_header: cookieHeaderParts.filter(Boolean).join('; '),
+    cookies,
+  };
+}
+
+function signUrlHeaders(url, headers) {
+  const NetworkParams = Java.use(NETWORK_PARAMS);
+  const provider = getProvider(NetworkParams);
+  if (!provider) throw new Error('MetaSec provider not installed yet');
+  const method = NetworkParams.LJIILLIIL.overload('java.lang.String', 'java.util.Map');
+  const result = method.call(NetworkParams, String(url || ''), buildHeaderMap(headers || {}));
+  return mapToObject(result) || {};
+}
+
 function httpRequest(url, method, postBody, headers) {
   return withJava(() => {
     const URL = Java.use('java.net.URL');
@@ -120,40 +176,38 @@ function httpRequest(url, method, postBody, headers) {
     conn.setInstanceFollowRedirects(false);
     conn.setDoInput(true);
 
-    // Apply base headers
-    for (const [name, value] of Object.entries(headers || {})) {
+    const baseHeaders = { ...(headers || {}) };
+    for (const [name, value] of Object.entries(baseHeaders)) {
       if (name && value) conn.setRequestProperty(String(name), String(value));
     }
 
-    // Sign the URL + current headers via NetworkParams
+    let signedHeaders = {};
+    let signError = '';
     try {
-      const NetworkParams = Java.use(NETWORK_PARAMS);
-      const provider = getProvider(NetworkParams);
-      if (provider) {
-        const currentHeaders = conn.getRequestProperties();
-        const headerMap = buildHeaderMap(mapToListOfStrings(currentHeaders));
-        const signMethod = NetworkParams.LJIILLIIL.overload('java.lang.String', 'java.util.Map');
-        const signed = signMethod.call(NetworkParams, String(url), headerMap);
-        const signedObj = mapToObject(signed);
-        if (signedObj) {
-          for (const [k, v] of Object.entries(signedObj)) {
-            try { conn.setRequestProperty(k, String(v)); } catch (_) {}
-          }
-        }
+      const currentHeaders = conn.getRequestProperties();
+      const headerMap = mapToListOfStrings(currentHeaders);
+      signedHeaders = signUrlHeaders(url, headerMap);
+      for (const [k, v] of Object.entries(signedHeaders)) {
+        try { conn.setRequestProperty(k, String(v)); } catch (_) {}
       }
-    } catch (_) {}
+    } catch (e) {
+      signError = safeString(e);
+    }
 
-    // Write body
+    const requestHeadersBeforeSend = mapToListOfStrings(conn.getRequestProperties());
+    const cookieInfo = collectCookiesForUrl(url);
+
     if (postBody && (method === 'POST' || method === 'PUT')) {
       conn.setDoOutput(true);
-      const bodyBytes = Java.array('byte', String(postBody).split('').map(c => c.charCodeAt(0)));
+      // UTF-8 body bytes (not charCodeAt which breaks non-ASCII)
+      const JString = Java.use('java.lang.String');
+      const bodyBytes = JString.$new(String(postBody)).getBytes('UTF-8');
       conn.setRequestProperty('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
       const os = conn.getOutputStream();
       os.write(bodyBytes);
       os.close();
     }
 
-    // Read response
     const status = conn.getResponseCode();
     const responseHeaders = mapToListOfStrings(conn.getHeaderFields());
     let body = '';
@@ -171,7 +225,6 @@ function httpRequest(url, method, postBody, headers) {
       body = String(baos.toString('UTF-8'));
       baos.close();
     } catch (e) {
-      // Try error stream
       try {
         const es = conn.getErrorStream();
         if (es) {
@@ -191,11 +244,30 @@ function httpRequest(url, method, postBody, headers) {
       try { conn.disconnect(); } catch (_) {}
     }
 
+    lastWireSnapshot = {
+      captured_at: Date.now(),
+      url: String(url),
+      method: String(method || 'POST'),
+      body: String(postBody || ''),
+      base_headers: baseHeaders,
+      signed_headers: signedHeaders,
+      request_headers: requestHeadersBeforeSend,
+      cookie_header: cookieInfo.cookie_header,
+      cookies: cookieInfo.cookies,
+      response_status: status,
+      response_headers: responseHeaders,
+      sign_error: signError || undefined,
+    };
+
     return {
       status,
       headers: responseHeaders,
       body,
       url: String(url),
+      signed_headers: signedHeaders,
+      request_headers: requestHeadersBeforeSend,
+      cookie_header: cookieInfo.cookie_header,
+      wire: lastWireSnapshot,
     };
   });
 }
@@ -249,14 +321,105 @@ rpc.exports = {
    */
   async signOnly(url, headers) {
     return withJava(() => {
-      const NetworkParams = Java.use(NETWORK_PARAMS);
-      const provider = getProvider(NetworkParams);
-      if (!provider) throw new Error('MetaSec provider not installed yet');
-      const method = NetworkParams.LJIILLIIL.overload('java.lang.String', 'java.util.Map');
-      const result = method.call(NetworkParams, String(url || ''), buildHeaderMap(headers || {}));
+      const signed = signUrlHeaders(url, headers || {});
+      const cookieInfo = collectCookiesForUrl(url);
+      lastWireSnapshot = {
+        captured_at: Date.now(),
+        url: String(url || ''),
+        method: 'SIGN_ONLY',
+        body: '',
+        base_headers: headers || {},
+        signed_headers: signed,
+        request_headers: { ...(headers || {}), ...signed },
+        cookie_header: cookieInfo.cookie_header,
+        cookies: cookieInfo.cookies,
+      };
       return {
         url: String(url || ''),
-        headers: mapToObject(result),
+        headers: signed,
+        cookie_header: cookieInfo.cookie_header,
+        cookies: cookieInfo.cookies,
+        wire: lastWireSnapshot,
+      };
+    });
+  },
+
+  /** Return last captured wire/sign snapshot (for classification dumps). */
+  async getLastWire() {
+    return lastWireSnapshot;
+  },
+
+  /**
+   * Export session material for Node-side pure/L2 HTTP.
+   * Best-effort: cookies + any readable device prefs.
+   */
+  async exportSession() {
+    return withJava(() => {
+      const cookieInfo = collectCookiesForUrl('https://ecom.ecombdapi.com/');
+      const cookieInfoSnssdk = collectCookiesForUrl('https://aweme.snssdk.com/');
+      const cookieInfoHaohuo = collectCookiesForUrl('https://haohuo.jinritemai.com/');
+
+      const mergedCookies = {
+        ...cookieInfo.cookies,
+        ...cookieInfoSnssdk.cookies,
+        ...cookieInfoHaohuo.cookies,
+      };
+      const cookieHeader = [
+        cookieInfo.cookie_header,
+        cookieInfoSnssdk.cookie_header,
+        cookieInfoHaohuo.cookie_header,
+      ].filter(Boolean).join('; ');
+
+      const device = {};
+      const prefsTried = [];
+
+      const prefNames = [
+        'applog_stats',
+        'ttnet_prefs',
+        'device_register',
+        'ss_app_config',
+        'push_multi_process_config',
+        'aweme_user',
+      ];
+
+      try {
+        const ActivityThread = Java.use('android.app.ActivityThread');
+        const ctx = ActivityThread.currentApplication().getApplicationContext();
+        for (const name of prefNames) {
+          try {
+            const prefs = ctx.getSharedPreferences(name, 0);
+            const all = prefs.getAll();
+            if (!all) continue;
+            const map = mapToObject(all);
+            prefsTried.push({ name, keys: Object.keys(map || {}) });
+            for (const [k, v] of Object.entries(map || {})) {
+              const key = String(k).toLowerCase();
+              if (
+                key.includes('device_id') || key === 'deviceid'
+                || key.includes('install_id') || key === 'iid'
+                || key.includes('cdid') || key.includes('clientudid')
+                || key.includes('openudid') || key.includes('klink')
+                || key.includes('ms_token') || key.includes('mstoken')
+                || key.includes('verify') || key.includes('session')
+                || key.includes('x-tt-token') || key.includes('store-region')
+              ) {
+                device[k] = String(v);
+              }
+            }
+          } catch (_) {}
+        }
+      } catch (e) {
+        prefsTried.push({ error: safeString(e) });
+      }
+
+      return {
+        exported_at: Date.now(),
+        package: PACKAGE_NAME,
+        cookie_header: cookieHeader,
+        cookies: mergedCookies,
+        device_candidates: device,
+        prefs_tried: prefsTried,
+        last_wire: lastWireSnapshot,
       };
     });
   },
