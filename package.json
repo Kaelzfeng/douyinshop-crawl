@@ -23,6 +23,7 @@
     "session:export": "node tools/export-app-session.mjs",
     "search:compare": "node tools/compare-search-modes.mjs",
     "sign:dump-pairs": "node tools/dump-sign-pairs.mjs",
+    "sign:local-service": "node tools/metasec-sign-service.mjs",
     "build:android-agent": "frida-compile android-only-collector/agent.js -o android-only-collector/agent.bundle.js -B iife -S",
     "build:direct-search": "frida-compile hook/direct-search-agent.js -o hook/direct-search-agent.bundle.js -B iife -S",
     "build:bypass": "frida-compile hook/bypass-agent.js -o hook/bypass-agent.bundle.js -B iife -S",

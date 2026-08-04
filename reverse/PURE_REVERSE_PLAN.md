@@ -290,14 +290,16 @@
 
 - [x] direct-search CLI + 翻页 + 短链
 - [ ] `frida_rpc` 多页稳定（Cookie + 完整 signOnly 头）
-- [ ] Unidbg 加载 `libmetasec_ml.so` 验证 getEncodedP（见 `unidbg-metasec/`）
+- [x] Unidbg 工程可编译；**SO 已成功 load**（`module_base` 可见，`/health` ok）
+- [ ] Unidbg 内调用 `f3.a` / `getEncodedP` 产出与 Frida 对齐的 X 头
 - [ ] 确认 verifyFp 生成路径（bdms 深处或 app 逻辑）
-- [ ] 搜索缺字段 H5 enrich 接入 CLI `--enrich`
+- [x] 搜索缺字段 H5 enrich 接入 CLI `--enrich`
+- [x] Frida 桥接签名侧车 `npm run sign:local-service`（与 Unidbg 同 HTTP 契约）
 
 ### 中期（2-4 周）
 
-- [ ] Unidbg → HTTP sidecar（`src/native-sign.mjs` 已预留客户端）
-- [ ] `--sign-mode local` 无 Frida 跑通 ≥1 页
+- [x] HTTP sidecar 契约（`src/native-sign.mjs` + Frida bridge / Unidbg jar）
+- [ ] `--sign-mode local` **纯 Unidbg、无 Frida** 跑通 ≥1 页
 - [ ] Session 过期检测与重新导出自动化
 - [ ] 完整 API 端点文档化
 

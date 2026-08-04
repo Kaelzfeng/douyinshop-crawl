@@ -66,3 +66,7 @@ reverse/single_classes/
 
 # 外部工具本地副本
 tools/ida-pro-mcp/
+
+# Unidbg build output
+unidbg-metasec/target/
+

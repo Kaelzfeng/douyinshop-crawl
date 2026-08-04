@@ -31,7 +31,20 @@ product_id,product_name,shop_name,price,sales,share_url
 |---------------|------|------|
 | `app_proxy`（默认） | Frida 在 App 内发 HTTP + 签名 | MuMu + 登录 + Frida |
 | `frida_rpc` | Frida 只签名，Node `fetch` 出站 | 同上 + `output/session.json` Cookie |
-| `local` | Unidbg MetaSec 侧车签名，无 Frida | `session.json` + `unidbg-metasec` 服务 |
+| `local` | Node 只调 HTTP 签名侧车 | `session.json` + 侧车（Frida 桥或 Unidbg） |
+
+**侧车（推荐过渡）：**
+
+```powershell
+# 终端 1 — Frida 签名服务（App 已登录）
+npm run build:direct-search
+npm run sign:local-service
+
+# 终端 2 — 采集进程不直接 attach Frida
+npm start -- --query 运动鞋 --all --sign-mode local
+```
+
+真正离线 Unidbg 见 `unidbg-metasec/README.md`（SO 加载脚手架已有，算法签名未完成）。
 
 ```powershell
 # 从 App 导出 Cookie / 设备参数（L2/L3 底座）

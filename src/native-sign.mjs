@@ -1,10 +1,15 @@
 /**
  * Local / sidecar MetaSec signer client (Phase C pure reverse).
  *
- * Talks to an optional Unidbg HTTP service:
- *   POST {baseUrl}/sign  { url, headers?, body? } → { headers }
+ * Talks to an HTTP sidecar on METASEC_SIGNER_URL (default http://127.0.0.1:17890):
+ *   GET  /health
+ *   POST /sign  { url, headers?, body? } → { ok, headers }
  *
- * When the sidecar is down, callers should fall back to Frida signOnly or app_proxy.
+ * Sidecar implementations (same contract):
+ *   - npm run sign:local-service  → Frida bridge (works today)
+ *   - unidbg-metasec jar          → offline goal (sign not fully wired yet)
+ *
+ * When the sidecar is down, callers should fall back to Frida in-process or app_proxy.
  */
 
 const DEFAULT_BASE = process.env.METASEC_SIGNER_URL || 'http://127.0.0.1:17890';
