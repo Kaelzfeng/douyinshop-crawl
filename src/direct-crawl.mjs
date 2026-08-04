@@ -8,7 +8,7 @@
 import fs from 'node:fs/promises';
 import { createSharePageEnricher } from './enrich.mjs';
 import { humanDelay } from './rate-limit.mjs';
-import { loadCheckpoint, writeArtifacts } from './output.mjs';
+import { loadCheckpoint, productIdentityKey, writeArtifacts } from './output.mjs';
 
 /**
  * Parse links from a file (one per line, CSV, or JSON array).
@@ -87,7 +87,7 @@ export async function crawlLinks(links, options = {}) {
   const seenLinks = new Set(products.map((p) => p['分享的链接']).filter(Boolean));
   const remaining = links.filter((l) => !seenLinks.has(l));
   const targetCount = Math.min(limit, remaining.length);
-  const productKeys = new Set(products.map((p) => p.productId || p['分享的链接']));
+  const productKeys = new Set(products.map(productIdentityKey));
 
   if (remaining.length === 0) {
     console.log('[direct-crawl] All links already in checkpoint. Nothing to do.');
@@ -106,7 +106,9 @@ export async function crawlLinks(links, options = {}) {
      */
     async function processOne(link) {
       const product = await enricher.enrich(link);
-      const key = product.productId || product['分享的链接'];
+      product.搜索关键词 = product.搜索关键词 || 'direct-crawl';
+      product.商品id = product.商品id || product.productId || '';
+      const key = productIdentityKey(product);
       if (!productKeys.has(key)) {
         products.push(product);
         productKeys.add(key);

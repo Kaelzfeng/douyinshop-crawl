@@ -16,10 +16,10 @@ function decodeXml(value = '') {
 
 export function cleanUiText(value = '') {
   return decodeXml(value)
-    .replace(/[\u200b-\u200d\u2060\ufeff]/g, '')
+    .replace(/[​-‍⁠﻿]/g, '')
     .replace(/\s+/g, ' ')
     .trim()
-    .replace(/^I(?=(?:【[^】]+】)?Golden\s*Goose)/i, '');
+    .replace(/^I(?=(?:[^]+)?Golden\s*Goose)/i, '');
 }
 
 function parseBounds(value = '') {
@@ -71,15 +71,68 @@ function isGoldenGooseTitle(value) {
   return compact.includes('goldengoose') && value.length >= 16;
 }
 
-export function findProductCandidates(nodes) {
+function isSearchProductTitle(value, query = '') {
+  // Golden Goose products always match
+  if (isGoldenGooseTitle(value)) return true;
+
+  const compact = value.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const q = String(query || '').trim().toLowerCase();
+
+  // No query: match Golden Goose / GGDB / 小脏鞋 products
+  if (!q) {
+    if (value.includes('小脏鞋') || value.includes('脏脏鞋') || value.includes('脏鞋')) return true;
+    return value.length >= 8 && value.length <= 200
+      && /ggdb|golden|goose/i.test(compact)
+      && !/^(搜索|综合|销量|价格|筛选|店铺|直播|视频|用户|商品)/.test(value);
+  }
+
+  // ggdb: must contain ggdb (case-insensitive via compact)
+  if (q === 'ggdb') {
+    return compact.includes('ggdb');
+  }
+
+  // 小脏鞋: match 小脏鞋 / 脏脏鞋 / 脏鞋 / GGDB / Golden Goose
+  if (q === '小脏鞋') {
+    if (value.includes('小脏鞋')) return true;
+    if (value.includes('脏脏鞋')) return true;
+    if (compact.includes('脏鞋')) return true;
+    // Also catch GGDB / Golden Goose products surfaced by search
+    if (compact.includes('ggdb')) return true;
+    if (compact.includes('goldengoose')) return value.length >= 8;
+    return false;
+  }
+
+  // Any other query: must appear literally in compact title
+  const cq = q.replace(/[^a-z0-9]/g, '');
+  if (!cq) return false; // query was purely non-alphanumeric (Chinese etc), no match
+  return compact.includes(cq);
+}
+
+function hasNearbyProductSignal(nodes, titleNode) {
+  return nodes.some((other) => {
+    if (!other.bounds) return false;
+    const value = nodeValue(other);
+    if (!value) return false;
+    const nearY = other.bounds.y >= titleNode.bounds.y - 80
+      && other.bounds.y <= titleNode.bounds.y + 260;
+    const overlapsX = other.bounds.x < titleNode.bounds.x + titleNode.bounds.width + 80
+      && other.bounds.x + other.bounds.width > titleNode.bounds.x - 80;
+    return nearY && overlapsX && /¥|￥|已售|券后价|到手价|立减|包邮|\d+件/.test(value);
+  });
+}
+
+export function findProductCandidates(nodes, query = '') {
   const seen = new Set();
   const candidates = [];
 
   for (const node of nodes) {
     const title = nodeValue(node);
-    if (!node.bounds || !isGoldenGooseTitle(title)) continue;
+    if (!node.bounds || !isSearchProductTitle(title, query)) continue;
     if (node.bounds.y < 200) continue;
     if (node.bounds.width < 120 || node.bounds.height > 120) continue;
+    // Skip sales/promotional text misidentified as products
+    if (/^(已售|全店已售|券后价|到手价|好评率|店铺销量|包邮|\d+件|周上新|官方正品|正品保障|售后无忧)/.test(title)) continue;
+    if (!hasNearbyProductSignal(nodes, node)) continue;
     if (seen.has(title)) continue;
 
     const isLive = nodes.some((other) => {

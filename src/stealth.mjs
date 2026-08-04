@@ -50,6 +50,54 @@ export const STEALTH_LITE_SCRIPT = `
   if (self.__playwright) delete self.__playwright;
 `;
 
+// ---------------------------------------------------------------------------
+// WebGL fingerprint spoofing — adds noise to WebGL renderer detection.
+// Injected separately to keep STEALTH_LITE minimal and avoid tripping
+// Douyin's fingerprint consistency checks.
+// ---------------------------------------------------------------------------
+export const WEBGL_SPOOF_SCRIPT = `
+  // Spoof WebGL vendor/renderer — common fingerprint vector
+  const webglVendors = [
+    { vendor: 'Qualcomm', renderer: 'Adreno (TM) 750' },
+    { vendor: 'Qualcomm', renderer: 'Adreno (TM) 740' },
+    { vendor: 'Qualcomm', renderer: 'Adreno (TM) 730' },
+    { vendor: 'ARM', renderer: 'Mali-G710 MC10' },
+    { vendor: 'ARM', renderer: 'Mali-G715 MC11' },
+    { vendor: 'ARM', renderer: 'Mali-G78 MP20' },
+    { vendor: 'Imagination Technologies', renderer: 'PowerVR GE9920' },
+    { vendor: 'Imagination Technologies', renderer: 'PowerVR B-Series BXT-32-1024' },
+  ];
+
+  const getParameterProxyHandler = {
+    apply: function(target, thisArg, args) {
+      const param = args[0];
+      // UNMASKED_VENDOR_WEBGL = 0x9245, UNMASKED_RENDERER_WEBGL = 0x9246
+      if (param === 37445) {
+        const idx = Math.floor(Math.random() * webglVendors.length);
+        return webglVendors[idx].vendor;
+      }
+      if (param === 37446) {
+        const idx = Math.floor(Math.random() * webglVendors.length);
+        return webglVendors[idx].renderer;
+      }
+      return Reflect.apply(target, thisArg, args);
+    }
+  };
+
+  try {
+    const origGetContext = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function() {
+      const ctx = origGetContext.apply(this, arguments);
+      if (arguments[0] && /webgl/i.test(arguments[0]) && ctx && ctx.getParameter) {
+        try {
+          ctx.getParameter = new Proxy(ctx.getParameter, getParameterProxyHandler);
+        } catch (_) {}
+      }
+      return ctx;
+    };
+  } catch (_) {}
+`;
+
 export const STEALTH_INIT_SCRIPT = `
   // 1. Hide webdriver flag — the #1 bot detection vector
   Object.defineProperty(navigator, 'webdriver', {
@@ -329,6 +377,8 @@ export async function createStealthContext(browser, fingerprint) {
 
   // Inject the stealth script on every page in this context
   await context.addInitScript(STEALTH_LITE_SCRIPT);
+  // Inject WebGL fingerprint spoofing
+  await context.addInitScript(WEBGL_SPOOF_SCRIPT);
   // Inject the fingerprint-specific overrides
   await context.addInitScript(initScript);
 

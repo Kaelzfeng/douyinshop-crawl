@@ -18,16 +18,42 @@ test('--all can retain an explicit safety scroll cap', () => {
   assert.equal(config.maxScrolls, 250);
 });
 
-test('fixed-count mode keeps its existing defaults', () => {
+test('fixed-count mode defaults are aggressive by default', () => {
   const config = parseArgs([], 'E:\\douyin-golden-goose-crawler');
 
   assert.equal(config.all, false);
+  assert.deepEqual(config.queries, ['ggdb', '小脏鞋']);
+  assert.equal(config.query, 'ggdb');
   assert.equal(config.limit, 20);
   assert.equal(config.maxScrolls, 30);
+  // Aggressive defaults
+  assert.equal(config.maxSharesPerWindow, 20);
+  assert.equal(config.shareWindowMs, 10 * 60_000);
+  assert.equal(config.accessDeniedCooldownMs, 3 * 60_000);
+  assert.equal(config.maxAccessDeniedRetries, 6);
+});
+
+test('--gentle reverts to conservative rate limits', () => {
+  const config = parseArgs(['--gentle'], 'E:\\douyin-golden-goose-crawler');
+
   assert.equal(config.maxSharesPerWindow, 8);
   assert.equal(config.shareWindowMs, 15 * 60_000);
   assert.equal(config.accessDeniedCooldownMs, 15 * 60_000);
   assert.equal(config.maxAccessDeniedRetries, 3);
+});
+
+test('--query keeps single-keyword behavior', () => {
+  const config = parseArgs(['--query', 'ggdb'], 'E:\\douyin-golden-goose-crawler');
+
+  assert.deepEqual(config.queries, ['ggdb']);
+  assert.equal(config.query, 'ggdb');
+});
+
+test('--queries accepts comma-separated keyword batches', () => {
+  const config = parseArgs(['--queries', 'ggdb,小脏鞋'], 'E:\\douyin-golden-goose-crawler');
+
+  assert.deepEqual(config.queries, ['ggdb', '小脏鞋']);
+  assert.equal(config.query, 'ggdb');
 });
 
 test('rate-limit controls can be configured', () => {

@@ -11,6 +11,8 @@ links.txt
 .claude/
 .playwright-cli/
 .playwright-mcp/
+.grok/
+tmp/
 __pycache__/
 **/__pycache__/
 .pytest_cache/

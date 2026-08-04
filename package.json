@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Playwright Android crawler for Golden Goose products in Douyin Mall on MuMu.",
+  "description": "Android-only Frida collector for Golden Goose products in Douyin Mall on MuMu.",
   "scripts": {
     "build:webview-agent": "frida-compile hook/enable-webview-debug.js -o hook/enable-webview-debug.bundle.js -B iife -S",
     "build:native-chain": "frida-compile hook/native-chain.js -o hook/native-chain.bundle.js -B iife -S",
@@ -16,7 +16,15 @@
     "test:signer": "python -m unittest discover -s test -p test_*.py",
     "verify:h5": "python tools/verify_h5_api.py",
     "probe": "node src/probe.mjs",
-    "start": "node src/cli.mjs",
+    "start": "node src/android-only-cli.mjs",
+    "start:direct-api": "node src/direct-search-cli.mjs",
+    "start:legacy": "node src/cli.mjs",
+    "build:android-agent": "frida-compile android-only-collector/agent.js -o android-only-collector/agent.bundle.js -B iife -S",
+    "build:direct-search": "frida-compile hook/direct-search-agent.js -o hook/direct-search-agent.bundle.js -B iife -S",
+    "build:bypass": "frida-compile hook/bypass-agent.js -o hook/bypass-agent.bundle.js -B iife -S",
+    "bypass:inject": "node hook/run-bypass.mjs",
+    "android:collect": "node src/android-only-cli.mjs",
+    "android:export": "node android-only-collector/export.mjs --db output/android-only.sqlite --output output/products.csv",
     "test": "node --test \"test/*.test.mjs\" && npm run test:signer"
   },
   "dependencies": {
