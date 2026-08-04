@@ -98,9 +98,9 @@ try {
   const config = parseArgs(process.argv.slice(2));
 
   if (config.mode === 'shop-seeds') {
-    const keyword = process.env.CRAWL_KEYWORD || config.query || '\u5c0f\u810f\u978b';
+    const keyword = process.env.CRAWL_KEYWORD || config.query || '';
     const outputPath = config.outputPath.includes('golden-goose-products.csv')
-      ? 'output/shop-from-seeds-xiaozangxie.csv'
+      ? 'output/shop-from-seeds.csv'
       : config.outputPath;
     const checkpointPath = config.checkpointPath.includes('checkpoint.json')
       ? 'data/shop-from-seeds-checkpoint.json'
@@ -136,17 +136,21 @@ try {
 
     if (!result.completed) process.exitCode = 2;
   } else if (config.mode === 'semi') {
-    const keywords = (config.queries?.length ? config.queries : ['\u5c0f\u810f\u978b', 'ggdb'])
+    const keywords = (config.queries?.length ? config.queries : [])
       .map((q) => String(q || '').trim())
       .filter(Boolean);
+    if (!keywords.length) {
+      console.error('[cli] semi requires --query / --queries / CRAWL_KEYWORDS');
+      process.exit(1);
+    }
     const outputPath = config.outputPath.includes('golden-goose-products.csv')
-      ? 'output/semi-xiaozangxie-ggdb.csv'
+      ? 'output/semi-products.csv'
       : config.outputPath;
     const checkpointPath = config.checkpointPath.includes('checkpoint.json')
-      ? 'data/semi-xiaozangxie-ggdb-checkpoint.json'
+      ? 'data/semi-checkpoint.json'
       : config.checkpointPath;
     const summaryPath = config.summaryPath.includes('run-summary.json')
-      ? 'output/semi-xiaozangxie-ggdb-summary.json'
+      ? 'output/semi-summary.json'
       : config.summaryPath;
 
     console.log('[cli] Semi-reverse crawl mode (NO share button)');
@@ -183,18 +187,21 @@ try {
 
     if (!lastResult?.completed) process.exitCode = 2;
   } else if (config.mode === 'frida') {
-    // Default: 小脏鞋 + ggdb. Override via --query / --queries / CRAWL_KEYWORDS
-    const keywords = (config.queries?.length ? config.queries : ['小脏鞋', 'ggdb'])
+    const keywords = (config.queries?.length ? config.queries : [])
       .map((q) => String(q || '').trim())
       .filter(Boolean);
+    if (!keywords.length) {
+      console.error('[cli] frida requires --query / --queries / CRAWL_KEYWORDS');
+      process.exit(1);
+    }
     const outputPath = config.outputPath.includes('golden-goose-products.csv')
-      ? 'output/frida-xiaozangxie-ggdb.csv'
+      ? 'output/frida-products.csv'
       : config.outputPath;
     const checkpointPath = config.checkpointPath.includes('checkpoint.json')
-      ? 'data/frida-xiaozangxie-ggdb-checkpoint.json'
+      ? 'data/frida-checkpoint.json'
       : config.checkpointPath;
     const summaryPath = config.summaryPath.includes('run-summary.json')
-      ? 'output/frida-xiaozangxie-ggdb-summary.json'
+      ? 'output/frida-summary.json'
       : config.summaryPath;
 
     console.log('[cli] Frida crawl mode');
@@ -237,9 +244,14 @@ try {
     if (!lastResult?.completed) process.exitCode = 2;
   } else if (config.mode === 'shop-tab') {
     // ---- Shop-tab mode: search → 店铺 → each shop ----
-    const keyword = config.query || '小脏鞋';
+    const keyword = String(config.query || '').trim();
+    if (!keyword) {
+      console.error('[cli] shop-tab requires --query / --queries / CRAWL_KEYWORDS');
+      process.exit(1);
+    }
+    const safeName = keyword.replace(/[^\w\u4e00-\u9fff-]+/gu, '_').slice(0, 40) || 'keyword';
     const outputPath = config.outputPath.includes('golden-goose-products.csv')
-      ? `output/shop-tab-${keyword === '小脏鞋' ? 'xiaozangxie' : keyword}.csv`
+      ? `output/shop-tab-${safeName}.csv`
       : config.outputPath;
 
     console.log('[cli] Shop-tab crawl mode');

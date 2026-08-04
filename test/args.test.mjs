@@ -22,8 +22,8 @@ test('fixed-count mode defaults are aggressive by default', () => {
   const config = parseArgs([], 'E:\\douyin-golden-goose-crawler');
 
   assert.equal(config.all, false);
-  assert.deepEqual(config.queries, ['ggdb', '小脏鞋']);
-  assert.equal(config.query, 'ggdb');
+  assert.deepEqual(config.queries, []);
+  assert.equal(config.query, '');
   assert.equal(config.limit, 20);
   assert.equal(config.maxScrolls, 30);
   // Aggressive defaults
@@ -31,6 +31,14 @@ test('fixed-count mode defaults are aggressive by default', () => {
   assert.equal(config.shareWindowMs, 10 * 60_000);
   assert.equal(config.accessDeniedCooldownMs, 3 * 60_000);
   assert.equal(config.maxAccessDeniedRetries, 6);
+});
+
+test('--query / --queries remain generic keyword inputs', () => {
+  assert.deepEqual(parseArgs(['--query', '运动鞋'], 'E:\\tmp').queries, ['运动鞋']);
+  assert.deepEqual(
+    parseArgs(['--queries', '帆布鞋,板鞋'], 'E:\\tmp').queries,
+    ['帆布鞋', '板鞋'],
+  );
 });
 
 test('--gentle reverts to conservative rate limits', () => {

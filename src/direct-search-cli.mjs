@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 /**
- * Direct Search CLI — True API-level Douyin Mall search crawler.
+ * Direct Search CLI — generic Douyin Mall keyword crawler (API-level).
  *
  * No ADB input, no UI automation, no share-button clicking.
- * Uses Frida RPC for app-internal request signing/proxying.
+ * Uses Frida app-proxy for request signing inside the running app.
  *
  * Usage:
- *   node src/direct-search-cli.mjs --keywords ggdb --all --count 20
- *   node src/direct-search-cli.mjs --keywords ggdb,小脏鞋 --max-pages 10
+ *   npm start -- --keywords 运动鞋 --all
+ *   npm start -- --query 帆布鞋 --max-pages 10
+ *   npm start -- --keywords-file keywords.txt --all
  */
 
 import fs from 'node:fs';
@@ -21,13 +22,48 @@ import { shortenProducts } from './official-shortener.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT_DIR = path.join(ROOT, 'output', 'direct-search');
-const DEFAULT_KEYWORDS = ['ggdb', '小脏鞋'];
+
+function splitKeywords(value) {
+  return String(value || '')
+    .split(/[,，\n\r\t]+/u)
+    .map((k) => k.trim())
+    .filter(Boolean);
+}
+
+function loadKeywordsFile(filePath) {
+  const resolved = path.resolve(filePath);
+  if (!fs.existsSync(resolved)) {
+    throw new Error(`keywords file not found: ${resolved}`);
+  }
+  return splitKeywords(fs.readFileSync(resolved, 'utf8'));
+}
+
+function resolveKeywords(values) {
+  const fromFile = values['keywords-file']
+    ? loadKeywordsFile(values['keywords-file'])
+    : [];
+  const fromList = splitKeywords(values.keywords);
+  const fromQuery = splitKeywords(values.query);
+  const fromEnv = splitKeywords(process.env.CRAWL_KEYWORDS || process.env.CRAWL_KEYWORD || '');
+
+  // Prefer explicit CLI flags over env; merge unique while preserving order.
+  const ordered = [];
+  const seen = new Set();
+  for (const keyword of [...fromFile, ...fromList, ...fromQuery, ...fromEnv]) {
+    if (seen.has(keyword)) continue;
+    seen.add(keyword);
+    ordered.push(keyword);
+  }
+  return ordered;
+}
 
 function parseOptions(argv = process.argv.slice(2)) {
   const { values } = parseArgs({
     args: argv,
     options: {
       keywords: { type: 'string', default: '' },
+      query: { type: 'string', default: '' },
+      'keywords-file': { type: 'string', default: '' },
       all: { type: 'boolean', default: false },
       count: { type: 'string', default: '20' },
       'max-pages': { type: 'string', default: '50' },
@@ -45,12 +81,8 @@ function parseOptions(argv = process.argv.slice(2)) {
     strict: true,
   });
 
-  const keywords = values.keywords
-    ? values.keywords.split(',').map(k => k.trim()).filter(Boolean)
-    : DEFAULT_KEYWORDS;
-
   return {
-    keywords,
+    keywords: resolveKeywords(values),
     all: values.all,
     count: Math.max(1, Math.min(50, Number(values.count) || 20)),
     maxPages: Math.max(1, Number(values['max-pages']) || 50),
@@ -62,17 +94,26 @@ function parseOptions(argv = process.argv.slice(2)) {
     noShorten: values['no-shorten'],
     singlePage: values['single-page'],
     serial: values.serial,
+    help: values.help,
   };
 }
 
 function helpText() {
-  return `Direct Search API Crawler for Douyin Mall
+  return `Douyin Mall generic keyword crawler (Direct Search API)
 
 Usage:
-  node src/direct-search-cli.mjs [options]
+  npm start -- --keywords <kw1,kw2> [options]
+  npm start -- --query <keyword> [options]
+  npm start -- --keywords-file <path> [options]
+
+Keywords (required, pick at least one source):
+  --keywords <kw1,kw2>    Comma-separated keywords
+  --query <keyword>       Single keyword (repeatable via --keywords)
+  --keywords-file <path>  One keyword per line (also accepts commas)
+  env CRAWL_KEYWORDS      Fallback when no flag is set (comma-separated)
+  env CRAWL_KEYWORD       Single-keyword fallback
 
 Options:
-  --keywords <kw1,kw2>   Comma-separated search keywords (default: ggdb,小脏鞋)
   --all                   Paginate until has_more=false
   --count <n>             Products per page (default: 20, max: 50)
   --max-pages <n>         Maximum pages per keyword (default: 50)
@@ -86,8 +127,8 @@ Options:
   --serial <id>           Frida device serial (default: emulator-5554)
   -h, --help              Show this help
 
-This crawler makes NO ADB input operations. It sends search requests
-directly via the app's network stack (Frida app-proxy mode).
+No ADB UI automation. Search requests go through the app network stack
+(Frida app-proxy). Requires MuMu + logged-in Douyin Mall + Frida.
 `;
 }
 
@@ -166,15 +207,23 @@ async function main() {
     return;
   }
 
+  if (!options.keywords.length) {
+    console.error('Error: at least one keyword is required.');
+    console.error('Use --keywords, --query, --keywords-file, or CRAWL_KEYWORDS.');
+    console.error('');
+    process.stdout.write(helpText());
+    process.exitCode = 1;
+    return;
+  }
+
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.mkdirSync(path.dirname(options.dbPath), { recursive: true });
   fs.mkdirSync(path.dirname(options.outputPath), { recursive: true });
 
   const runId = `direct-search-${Date.now()}`;
   const store = new SQLiteEventStore({ dbPath: options.dbPath, runId });
-  const allLinkedProducts = [];
 
-  console.log('=== Direct Search API Crawler ===');
+  console.log('=== Douyin Mall Keyword Crawler (Direct Search) ===');
   console.log(`Keywords: ${options.keywords.join(', ')}`);
   console.log(`DB: ${options.dbPath}`);
   console.log(`Output: ${options.outputPath}`);

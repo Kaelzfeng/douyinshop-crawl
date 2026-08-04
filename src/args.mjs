@@ -1,6 +1,7 @@
 import path from 'node:path';
 
-export const DEFAULT_QUERIES = ['ggdb', '小脏鞋'];
+/** No product-category defaults — callers must pass --query / --queries / CRAWL_KEYWORDS. */
+export const DEFAULT_QUERIES = [];
 
 function readValue(argv, name, fallback) {
   const index = argv.indexOf(name);
@@ -14,7 +15,7 @@ function hasValue(argv, name) {
 
 function parseQueries(value) {
   return String(value || '')
-    .split(',')
+    .split(/[,，]/u)
     .map((query) => query.trim())
     .filter(Boolean);
 }
@@ -46,30 +47,20 @@ export function parseArgs(argv, cwd = process.cwd()) {
 
   // Extract product_id from a v.douyin.com share link if given
   const shopLink = readValue(argv, '--shop', null);
-  const queries = hasValue(argv, '--query')
-    ? [readValue(argv, '--query', DEFAULT_QUERIES[0])]
-    : parseQueries(readValue(argv, '--queries', DEFAULT_QUERIES.join(',')));
-
-  // Frida / shop-tab: default both 小脏鞋 + ggdb (env CRAWL_KEYWORDS overrides)
-  // Use unicode escapes so source encoding never corrupts Chinese keywords.
-  const dualDefaultQueries = ['\u5c0f\u810f\u978b', 'ggdb'];
-  const preferDual = mode === 'shop-tab' || mode === 'frida' || mode === 'semi';
   const envQueries = process.env.CRAWL_KEYWORDS
     ? parseQueries(process.env.CRAWL_KEYWORDS)
-    : (process.env.CRAWL_KEYWORD ? [process.env.CRAWL_KEYWORD] : null);
-  const dualQueries = hasValue(argv, '--query')
-    ? [readValue(argv, '--query', dualDefaultQueries[0])]
+    : (process.env.CRAWL_KEYWORD ? [process.env.CRAWL_KEYWORD] : []);
+  const queries = hasValue(argv, '--query')
+    ? [readValue(argv, '--query', '')].filter(Boolean)
     : (argv.includes('--queries')
-      ? parseQueries(readValue(argv, '--queries', dualDefaultQueries.join(',')))
-      : (envQueries || (preferDual ? [...dualDefaultQueries] : null)));
+      ? parseQueries(readValue(argv, '--queries', ''))
+      : (envQueries.length ? envQueries : []));
 
   const config = {
     // Common
     mode,
-    query: (preferDual ? (dualQueries?.[0]) : queries[0]) || DEFAULT_QUERIES[0],
-    queries: preferDual
-      ? (dualQueries?.length ? dualQueries : [...dualDefaultQueries])
-      : (queries.length ? queries : [...DEFAULT_QUERIES]),
+    query: queries[0] || '',
+    queries,
     serial: readValue(argv, '--serial', process.env.MUMU_SERIAL || '127.0.0.1:16384'),
     all,
     limit: all ? Number.POSITIVE_INFINITY : positiveInteger(readValue(argv, '--limit', '20'), '--limit'),
