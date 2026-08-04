@@ -291,10 +291,13 @@
 - [x] direct-search CLI + 翻页 + 短链
 - [ ] `frida_rpc` 多页稳定（Cookie + 完整 signOnly 头）
 - [x] Unidbg 工程可编译；**SO 已成功 load**（`module_base` 可见，`/health` ok）
-- [x] 锁定 `JNI_OnLoad` 导出偏移 `SO+0x28f03c`；`getEncodedP` 无导出
+- [x] 锁定 `JNI_OnLoad` 导出偏移 `SO+0x28f03c`（**唯一** dynsym 定义符号）；`getEncodedP` 无导出
+- [x] 澄清：`getEncodedP` 字符串 XREF 多为 **unwind 误报**，非算法函数体
 - [x] Frida `signOnly` 采集 `f3_io` + `metasec_handle`（供离线对照）
+- [x] Frida native 追踪骨架：`npm run trace:metasec`（dlsym/dlopen/RegisterNatives/f3.a/ArtMethod 探针）
+- [ ] 在真机跑通 `trace:metasec --sign`，拿到 **f3.a native entry 偏移**
 - [ ] 绕过/模拟 MetaSec `JNI_OnLoad` 环境校验（当前 `Illegal JNI version: 0xffffffff`）
-- [ ] Unidbg 内 `f3.a` / `getEncodedP` 产出与 Frida 对齐的 X 头
+- [ ] Unidbg 内按 native entry 调用 / 对齐 Frida X 头
 - [ ] 确认 verifyFp 生成路径（bdms 深处或 app 逻辑）
 - [x] 搜索缺字段 H5 enrich 接入 CLI `--enrich`
 - [x] Frida 桥接签名侧车 `npm run sign:local-service`（与 Unidbg 同 HTTP 契约）

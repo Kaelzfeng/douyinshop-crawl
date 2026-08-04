@@ -44,7 +44,16 @@ npm run sign:local-service
 npm start -- --query 运动鞋 --all --sign-mode local
 ```
 
-真正离线 Unidbg 见 `unidbg-metasec/README.md`（SO 加载脚手架已有，算法签名未完成）。
+真正离线 Unidbg 见 `unidbg-metasec/README.md`（SO 可 load，算法签名未完成）。
+
+**MetaSec native 追踪（有模拟器时）：**
+
+```powershell
+npm run build:metasec-trace
+npm run trace:metasec -- --sign --wait-ms 5000
+# 输出 output/direct-search/metasec-native-trace-*.json
+# 目标：拿到 f3.a 的 native 入口模块偏移，供 Unidbg 定点调用
+```
 
 ```powershell
 # 从 App 导出 Cookie / 设备参数（L2/L3 底座）

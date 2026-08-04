@@ -111,14 +111,38 @@ libsscronet.so (Cronet网络引擎)
 |----|-----|
 | module_base | `0x40000000` |
 | module_size | `5783552` |
-| **JNI_OnLoad 导出** | ✅ `module_base + 0x28f03c` → 与静态 VA `0x28f03c` 一致 |
+| **JNI_OnLoad 导出** | ✅ 唯一 dynsym 定义符号；`SO+0x28f03c`，size `0x334` |
 | getEncodedP 导出 | ❌ 无符号（仅 `.rodata` 字符串 `@0xc35d4`） |
-| Java_ms_bd_c_f3_a 导出 | ❌（应为 RegisterNatives 动态注册） |
+| Java_ms_bd_c_f3_a 导出 | ❌（动态注册，且 **无 `RegisterNatives` 导入**） |
+| 动态导入 | `dlopen` / `dlsym` / `memcpy` / `vsnprintf` / `strlen` … |
 | callJNI_OnLoad | ❌ `Illegal JNI version: 0xffffffff`（反调试/环境校验） |
 
-结论：
+### getEncodedP 交叉引用 — 重要更正
 
-1. 入口 `JNI_OnLoad` 偏移已锁定：`SO+0x28f03c`。
-2. 签名 native 不靠标准 JNI 导出名，必须走 **RegisterNatives** 或从 `f3.a` 动态指针反推。
-3. 离线 `JNI_OnLoad` 需先过 MetaSec 环境检测；短期生产签名继续用 Frida 桥。
-4. Frida 侧已增强：`signOnly` 可记录 `f3_io` + `metasec_handle`（`z4.LIZ`），见 `npm run sign:dump-pairs`。
+用 Capstone 跟 `ADRP+ADD → 0xc35d4` 的代码点（如 `0x4bf458`）后发现：
+
+- 这些点落在 **`0x4bf2a0` 起的 unwind/DWARF 指针解码例程**（LEB128、`libunwind` 错误字符串）。
+- `getEncodedP` 字符串与 `std::bad_alloc`、`X-BD-KMSV`、`objc_object` 等挤在同一 rodata 区；
+  **邻近字符串被错误路径引用 ≠ 加密函数 XREF**。
+- 因此：**不能**再把 `0x4bf2a0` 当作 `getEncodedP` 实现体。
+
+真正签名入口应优先：
+
+1. Java `ms.bd.c.f3.a` → ART 绑定的 native entry（Frida 抓 `ArtMethod` / 调用栈）
+2. `dlsym("…")` 动态解析（SO **imports dlsym**）
+3. 自建 JNIEnv vtable 调用（无 `RegisterNatives` 导入，可能手写 env→func）
+
+### Frida 追踪工具
+
+```powershell
+npm run build:metasec-trace
+npm run trace:metasec -- --sign --wait-ms 5000
+# → output/direct-search/metasec-native-trace-*.json
+```
+
+另：`signOnly` 可记录 `f3_io` + `metasec_handle`（`z4.LIZ`），见 `npm run sign:dump-pairs`。
+
+### 静态探测产物
+
+- `tools/probe_metasec_static.py` → `output/direct-search/metasec-static-probe.json`
+- `tools/disasm_metasec_getencoded.py` → `output/direct-search/metasec-disasm-getencoded.json`
